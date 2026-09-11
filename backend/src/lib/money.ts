@@ -15,3 +15,24 @@ export function sumLineItems(
   }
   return total;
 }
+
+/**
+ * Bir tutarı N kişi arasında KURUŞU KURUŞUNA eksiksiz böler — ₺200 / 3 gibi
+ * bölünmeyen tutarlarda "kayıp kuruş" olmaması için tamamı kuruş (integer)
+ * üzerinden hesaplanır, kalan kuruşlar sırayla ilk katılımcılara dağıtılır.
+ * Örnek: 200.00 / 3 -> [66.67, 66.67, 66.66] (toplamı tam 200.00).
+ */
+export function splitEvenly(total: Prisma.Decimal, parts: number): Prisma.Decimal[] {
+  if (parts <= 0) return [];
+
+  const totalCents = total.times(100).toDecimalPlaces(0).toNumber();
+  const baseCents = Math.floor(totalCents / parts);
+  const remainderCents = totalCents - baseCents * parts;
+
+  const shares: Prisma.Decimal[] = [];
+  for (let i = 0; i < parts; i++) {
+    const cents = baseCents + (i < remainderCents ? 1 : 0);
+    shares.push(new Prisma.Decimal(cents).dividedBy(100));
+  }
+  return shares;
+}

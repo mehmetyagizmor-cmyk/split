@@ -2,8 +2,17 @@ import { Router } from "express";
 import { asyncHandler } from "../middleware/asyncHandler";
 import { validate } from "../middleware/validate";
 import { requireCustomerSession } from "../middleware/customerAuth";
-import { createOrderSchema } from "../schemas/order.schemas";
-import { createOrder, getMyOrders } from "../controllers/orders.controller";
+import {
+  createOrderSchema,
+  orderItemParamsSchema,
+  shareOrderItemSchema,
+} from "../schemas/order.schemas";
+import {
+  createOrder,
+  getMyOrders,
+  getBillOrders,
+  shareOrderItem,
+} from "../controllers/orders.controller";
 
 export const ordersRouter = Router();
 
@@ -17,3 +26,10 @@ ordersRouter.post(
 );
 
 ordersRouter.get("/my", asyncHandler(getMyOrders));
+ordersRouter.get("/bill", asyncHandler(getBillOrders));
+
+ordersRouter.post(
+  "/items/:orderItemId/share",
+  validate({ params: orderItemParamsSchema, body: shareOrderItemSchema }),
+  asyncHandler(shareOrderItem),
+);

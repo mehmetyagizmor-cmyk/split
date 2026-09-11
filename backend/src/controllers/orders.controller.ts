@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { ApiError } from "../lib/errors";
-import { sumLineItems } from "../lib/money";
+import { sumLineItems, splitEvenly } from "../lib/money";
 
 type OrderItemInput = { menuItemId: string; quantity: number };
 
@@ -87,4 +87,122 @@ export async function getMyOrders(req: Request, res: Response) {
   });
 
   res.json({ orders: orders.map(serializeOrder) });
+}
+
+type BillOrderWithRelations = Prisma.OrderGetPayload<{
+  include: {
+    customerSession: { select: { id: true; name: true } };
+    items: {
+      include: {
+        menuItem: { select: { name: true } };
+        sharedParticipants: {
+          include: { customerSession: { select: { id: true; name: true } } };
+        };
+      };
+    };
+  };
+}>;
+
+function serializeBillOrder(order: BillOrderWithRelations) {
+  return {
+    id: order.id,
+    status: order.status,
+    createdAt: order.createdAt,
+    orderedBy: { id: order.customerSession.id, name: order.customerSession.name },
+    items: order.items.map((item) => ({
+      id: item.id,
+      name: item.menuItem.name,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice.toFixed(2),
+      lineTotal: item.unitPrice.times(item.quantity).toFixed(2),
+      isShared: item.isShared,
+      sharedWith: item.sharedParticipants.map((p) => ({
+        customerSessionId: p.customerSession.id,
+        name: p.customerSession.name,
+        shareAmount: p.shareAmount.toFixed(2),
+      })),
+    })),
+  };
+}
+
+/**
+ * GET /api/orders/bill
+ * O an açık olan Bill'e ait TÜM siparişler (sadece kendi siparişlerim değil) —
+ * "ortak ürün" işaretlemek için masadaki herkesin siparişini görmek gerekiyor.
+ */
+export async function getBillOrders(req: Request, res: Response) {
+  const orders = await prisma.order.findMany({
+    where: { billId: req.customerSession!.billId, status: { not: "CANCELLED" } },
+    orderBy: { createdAt: "desc" },
+    include: {
+      customerSession: { select: { id: true, name: true } },
+      items: {
+        include: {
+          menuItem: { select: { name: true } },
+          sharedParticipants: {
+            include: { customerSession: { select: { id: true, name: true } } },
+          },
+        },
+      },
+    },
+  });
+
+  res.json({ orders: orders.map(serializeBillOrder) });
+}
+
+/**
+ * POST /api/orders/items/:orderItemId/share
+ * Bir sipariş kalemini masadaki seçilen kişiler arasında böler.
+ * customerSessionIds boş gönderilirse paylaşım kaldırılır (isShared=false).
+ */
+export async function shareOrderItem(req: Request, res: Response) {
+  const { orderItemId } = req.params as { orderItemId: string };
+  const { customerSessionIds } = req.body as { customerSessionIds: string[] };
+  const { billId } = req.customerSession!;
+
+  const orderItem = await prisma.orderItem.findUnique({
+    where: { id: orderItemId },
+    include: { order: { select: { billId: true } } },
+  });
+
+  // Ürün gerçekten bu müşterinin masasının (bill'inin) siparişlerinden biri mi?
+  // Değilse — id doğru ama başka bir masaya aitse — 404 dönüp varlığını bile
+  // sızdırmıyoruz.
+  if (!orderItem || orderItem.order.billId !== billId) {
+    throw new ApiError(404, "Sipariş kalemi bulunamadı");
+  }
+
+  if (customerSessionIds.length > 0) {
+    // Seçilen katılımcıların hepsi GERÇEKTEN aynı masanın (bill'in) müşterileri mi?
+    const validCount = await prisma.customerSession.count({
+      where: { id: { in: customerSessionIds }, billId },
+    });
+    if (validCount !== new Set(customerSessionIds).size) {
+      throw new ApiError(400, "Geçersiz katılımcı seçildi");
+    }
+  }
+
+  const lineTotal = orderItem.unitPrice.times(orderItem.quantity);
+  const shares = splitEvenly(lineTotal, customerSessionIds.length);
+
+  await prisma.$transaction([
+    prisma.sharedItemParticipant.deleteMany({ where: { orderItemId } }),
+    prisma.orderItem.update({
+      where: { id: orderItemId },
+      data: { isShared: customerSessionIds.length > 0 },
+    }),
+    ...(customerSessionIds.length > 0
+      ? [
+          prisma.sharedItemParticipant.createMany({
+            data: customerSessionIds.map((customerSessionId, i) => ({
+              orderItemId,
+              customerSessionId,
+              shareAmount: shares[i],
+            })),
+          }),
+        ]
+      : []),
+  ]);
+
+  res.json({ success: true });
 }

@@ -90,6 +90,13 @@ export function TableLobbyPage() {
         >
           Benim Hesabım
         </Link>
+
+        <Link
+          to={`/table/${tableToken}/shared-items`}
+          className="mt-3 block w-full rounded-xl bg-white py-3 text-center text-base font-medium text-neutral-900 shadow-sm ring-1 ring-neutral-200 transition hover:bg-neutral-50"
+        >
+          Ortak Ürünler
+        </Link>
       </div>
     </div>
   );

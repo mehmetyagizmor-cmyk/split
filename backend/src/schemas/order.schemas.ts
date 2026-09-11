@@ -10,3 +10,12 @@ export const createOrderSchema = z.object({
     )
     .min(1, "En az bir ürün seçmelisiniz"),
 });
+
+export const orderItemParamsSchema = z.object({
+  orderItemId: z.uuid(),
+});
+
+// Boş dizi = paylaşımı kaldır (isShared=false'a geri döner).
+export const shareOrderItemSchema = z.object({
+  customerSessionIds: z.array(z.uuid()),
+});

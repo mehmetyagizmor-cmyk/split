@@ -5,6 +5,7 @@ import { MenuPage } from "./pages/MenuPage";
 import { CartPage } from "./pages/CartPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { BillPage } from "./pages/BillPage";
+import { SharedItemsPage } from "./pages/SharedItemsPage";
 
 /**
  * Uygulamanın kök route tanımları. Sonraki fazlarda /staff/*, /admin/*,
@@ -33,6 +34,7 @@ function App() {
       <Route path="/table/:tableToken/cart" element={<CartPage />} />
       <Route path="/table/:tableToken/orders" element={<OrdersPage />} />
       <Route path="/table/:tableToken/bill" element={<BillPage />} />
+      <Route path="/table/:tableToken/shared-items" element={<SharedItemsPage />} />
     </Routes>
   );
 }
