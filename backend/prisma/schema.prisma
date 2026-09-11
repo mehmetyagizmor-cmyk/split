@@ -1,0 +1,303 @@
+// Split — Prisma Schema
+// Öğrenmesi kolay olsun diye tüm modelleri tek dosyada tutuyoruz.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUM'LAR
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+/// Bir masanın o anki fiziksel durumu (personel dashboard'unda görünür).
+enum TableStatus {
+  AVAILABLE // boş, yeni müşteri katılabilir
+  OCCUPIED // aktif bir Bill var, müşteriler sipariş veriyor
+  CLOSED // hesap tamamen ödendi, personel masayı temizleyip AVAILABLE'a resetlemeli
+}
+
+/// Bir "Bill", bir masanın tek oturuşluk (aynı müşteri grubunun) hesabını temsil eder.
+enum BillStatus {
+  OPEN
+  CLOSED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  SERVED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+// ─────────────────────────────────────────────
+// TENANT / KULLANICI
+// ─────────────────────────────────────────────
+
+/// Her restoran ayrı bir "tenant"tır. Tüm ana modellerde restaurantId
+/// zorunlu tutularak restoranlar arası veri sızıntısı şema seviyesinde engellenir.
+model Restaurant {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users            User[]
+  tables           Table[]
+  menuCategories   MenuCategory[]
+  menuItems        MenuItem[]
+  bills            Bill[]
+  customerSessions CustomerSession[]
+  orders           Order[]
+  payments         Payment[]
+}
+
+/// Restoran personeli / admini. Müşterilerin (CustomerSession) hesabı YOKTUR —
+/// sadece staff/admin bu tabloda tutulur.
+model User {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  email        String
+  passwordHash String
+  name         String
+  role         UserRole
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Aynı e-posta farklı restoranlarda tekrar kullanılabilir,
+  // ama aynı restoran içinde e-posta tekil olmalı.
+  @@unique([restaurantId, email])
+  @@index([restaurantId])
+}
+
+// ─────────────────────────────────────────────
+// MASA & QR
+// ─────────────────────────────────────────────
+
+model Table {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  label  String // örn. "Masa 12"
+  // QR kodun yönlendirdiği güvenli, tahmin edilemez token. restaurantId'yi
+  // URL'de asla açık taşımayız — token tek başına masayı bulmaya yeter.
+  token  String      @unique @default(uuid())
+  status TableStatus @default(AVAILABLE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bills Bill[]
+
+  @@index([restaurantId])
+}
+
+// ─────────────────────────────────────────────
+// MASA OTURUMU (BILL) & MÜŞTERİ
+// ─────────────────────────────────────────────
+
+/// Bir masanın TEK oturuşluk hesabı. İlk müşteri masaya katıldığında oluşur,
+/// herkes ödediğinde CLOSED olur. Aynı fiziksel masa zamanla birden çok Bill'e
+/// sahip olur (farklı müşteri grupları) — CustomerSession/Order/Payment hep
+/// Table'a değil, o anki Bill'e bağlanır. Böylece masa resetlendiğinde eski
+/// müşteriler yeni gelenlerin ekranında asla görünmez.
+model Bill {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  tableId      String
+  table        Table      @relation(fields: [tableId], references: [id])
+
+  status BillStatus @default(OPEN)
+
+  openedAt DateTime  @default(now())
+  closedAt DateTime?
+
+  customerSessions CustomerSession[]
+  orders           Order[]
+  payments         Payment[]
+
+  @@index([restaurantId])
+  @@index([tableId])
+}
+
+/// QR ile masaya katılan her kişinin "kimliği". Hesap/parola gerektirmez —
+/// sadece isim girilir, session tek bir Bill'e bağlıdır.
+model CustomerSession {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  billId       String
+  bill         Bill       @relation(fields: [billId], references: [id])
+
+  name     String
+  joinedAt DateTime @default(now())
+
+  orders                   Order[]
+  sharedItemParticipations SharedItemParticipant[]
+  payments                 Payment[]
+
+  @@index([restaurantId])
+  @@index([billId])
+}
+
+// ─────────────────────────────────────────────
+// MENÜ
+// ─────────────────────────────────────────────
+
+model MenuCategory {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  name      String
+  sortOrder Int    @default(0)
+
+  menuItems MenuItem[]
+
+  @@index([restaurantId])
+}
+
+model MenuItem {
+  id           String       @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id])
+  categoryId   String
+  category     MenuCategory @relation(fields: [categoryId], references: [id])
+
+  name        String
+  description String?
+  // Para: her zaman Decimal — JS Float ile yuvarlama hatası yaşamamak için.
+  price       Decimal @db.Decimal(10, 2)
+  isAvailable Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+
+  @@index([restaurantId])
+  @@index([categoryId])
+}
+
+// ─────────────────────────────────────────────
+// SİPARİŞ
+// ─────────────────────────────────────────────
+
+/// Bir müşterinin tek seferde verdiği sipariş (sepeti onaylaması).
+model Order {
+  id                String          @id @default(uuid())
+  restaurantId      String
+  restaurant        Restaurant      @relation(fields: [restaurantId], references: [id])
+  billId            String
+  bill              Bill            @relation(fields: [billId], references: [id])
+  customerSessionId String
+  customerSession   CustomerSession @relation(fields: [customerSessionId], references: [id])
+
+  status OrderStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items OrderItem[]
+
+  @@index([restaurantId])
+  @@index([billId])
+  @@index([customerSessionId])
+}
+
+model OrderItem {
+  id      String @id @default(uuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+
+  quantity  Int
+  // Sipariş anındaki fiyatın "anlık görüntüsü" — MenuItem.price sonradan
+  // değişse bile geçmiş siparişlerin tutarı sabit kalır.
+  unitPrice Decimal @db.Decimal(10, 2)
+
+  // true ise bu ürün masadaki birden fazla kişi arasında paylaşılıyordur.
+  isShared Boolean @default(false)
+  notes    String?
+
+  sharedParticipants SharedItemParticipant[]
+
+  @@index([orderId])
+  @@index([menuItemId])
+}
+
+/// isShared=true olan bir OrderItem'ı hangi müşterilerin paylaştığı ve
+/// her birinin payına düşen tutar. shareAmount hesaplanıp burada saklanır
+/// ki katılımcı listesi değişmedikçe tekrar hesaplamaya gerek kalmasın.
+model SharedItemParticipant {
+  id          String    @id @default(uuid())
+  orderItemId String
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  customerSessionId String
+  customerSession   CustomerSession @relation(fields: [customerSessionId], references: [id])
+
+  shareAmount Decimal @db.Decimal(10, 2)
+
+  // Bir müşteri aynı ürünü paylaşan listede yalnızca bir kez yer alabilir.
+  @@unique([orderItemId, customerSessionId])
+  @@index([customerSessionId])
+}
+
+// ─────────────────────────────────────────────
+// ÖDEME
+// ─────────────────────────────────────────────
+
+/// Bir müşterinin kendi payını ödeme kaydı. MVP'de gerçek bir ödeme
+/// sağlayıcısına bağlanmıyor (mock) — ama alanlar gerçek bir entegrasyonu
+/// (iyzico, Stripe vb.) sonradan eklemeye hazır şekilde tasarlandı.
+model Payment {
+  id                String          @id @default(uuid())
+  restaurantId      String
+  restaurant        Restaurant      @relation(fields: [restaurantId], references: [id])
+  billId            String
+  bill              Bill            @relation(fields: [billId], references: [id])
+  customerSessionId String
+  customerSession   CustomerSession @relation(fields: [customerSessionId], references: [id])
+
+  // Ödeme anında hesaplanmış dökümün anlık görüntüsü:
+  itemsAmount      Decimal @db.Decimal(10, 2) // kişisel ürünler + ortak ürün payı
+  serviceFeeAmount Decimal @default(0) @db.Decimal(10, 2)
+  tipAmount        Decimal @default(0) @db.Decimal(10, 2)
+  totalAmount      Decimal @db.Decimal(10, 2)
+
+  status   PaymentStatus @default(PENDING)
+  provider String        @default("MOCK") // ileride "iyzico", "stripe" vb. olacak
+
+  createdAt DateTime  @default(now())
+  paidAt    DateTime?
+
+  @@index([restaurantId])
+  @@index([billId])
+  @@index([customerSessionId])
+}
