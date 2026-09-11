@@ -32,6 +32,17 @@ npm install
 npm run dev   # http://localhost:5173
 ```
 
+## Testler
+
+Backend, gerçek (dev) Neon veritabanına karşı çalışan bir entegrasyon test paketine
+sahip — kendi izole test verisini oluşturup sonunda temizler, "Demo Cafe" seed
+verisine dokunmaz.
+
+```bash
+cd backend
+npm test
+```
+
 ## Proje Durumu
 
-Geliştirme aşamalı (phase'ler halinde) yürütülüyor. Şu an: **Phase 1 — Proje Kurulumu** tamamlandı.
+Geliştirme aşamalı (phase'ler halinde) yürütülüyor. Şu an: **Phase 15 — Testing + Security** tamamlandı.
