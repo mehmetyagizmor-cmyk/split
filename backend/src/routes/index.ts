@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { tablesRouter } from "./tables.routes";
+import { authRouter } from "./auth.routes";
 
 /**
  * Tüm API route'larının birleştiği yer. Yeni bir kaynak (orders, bills,
@@ -8,3 +9,4 @@ import { tablesRouter } from "./tables.routes";
 export const apiRouter = Router();
 
 apiRouter.use("/tables", tablesRouter);
+apiRouter.use("/auth", authRouter);

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import { apiRouter } from "./routes";
@@ -12,8 +13,16 @@ const app = express();
 const PORT = process.env.PORT ?? 4000;
 
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    // Cookie tabanlı auth kullandığımız için origin "*" olamaz — credentials:true
+    // ile birlikte tarayıcı yalnızca açıkça izin verilen origin'e cookie gönderir.
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  }),
+);
 app.use(express.json());
+app.use(cookieParser());
 
 // Public endpoint'ler (masa arama, menü vb.) hesap gerektirmediği için
 // brute-force / scraping'i zorlaştırmak amacıyla genel bir rate limit uygulanıyor.

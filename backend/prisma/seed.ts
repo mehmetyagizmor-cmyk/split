@@ -6,15 +6,38 @@
  * siler, sonra sıfırdan oluşturur — geliştirme sırasında rahatça sıfırlayabilirsin.
  */
 import { PrismaClient } from "@prisma/client";
+import { hashPassword } from "../src/lib/password";
 
 const prisma = new PrismaClient();
+
+async function deleteExistingDemoData(restaurantId: string) {
+  // Restaurant'a bağlı foreign key'ler ON DELETE RESTRICT olduğu için,
+  // Restaurant'ı silebilmeden önce alt kayıtları en "yapraktan" başlayıp
+  // doğru sırayla silmemiz gerekiyor. Tek bir transaction içinde yapıyoruz
+  // ki yarıda kesilirse veritabanı tutarsız bir ara durumda kalmasın.
+  await prisma.$transaction([
+    prisma.sharedItemParticipant.deleteMany({
+      where: { orderItem: { order: { restaurantId } } },
+    }),
+    prisma.payment.deleteMany({ where: { restaurantId } }),
+    prisma.orderItem.deleteMany({ where: { order: { restaurantId } } }),
+    prisma.order.deleteMany({ where: { restaurantId } }),
+    prisma.customerSession.deleteMany({ where: { restaurantId } }),
+    prisma.bill.deleteMany({ where: { restaurantId } }),
+    prisma.menuItem.deleteMany({ where: { restaurantId } }),
+    prisma.menuCategory.deleteMany({ where: { restaurantId } }),
+    prisma.table.deleteMany({ where: { restaurantId } }),
+    prisma.user.deleteMany({ where: { restaurantId } }),
+    prisma.restaurant.delete({ where: { id: restaurantId } }),
+  ]);
+}
 
 async function main() {
   const existing = await prisma.restaurant.findFirst({
     where: { name: "Demo Cafe" },
   });
   if (existing) {
-    await prisma.restaurant.delete({ where: { id: existing.id } });
+    await deleteExistingDemoData(existing.id);
     console.log("🗑️  Eski 'Demo Cafe' verisi silindi.");
   }
 
@@ -27,6 +50,30 @@ async function main() {
       restaurantId: restaurant.id,
       label: `Masa ${n}`,
     })),
+  });
+
+  // Staff/admin login testi için demo kullanıcılar. Şifreler sadece local
+  // geliştirme verisi — production seed'i asla bu dosyadan çalıştırılmaz.
+  const adminPasswordHash = await hashPassword("admin123");
+  const staffPasswordHash = await hashPassword("staff123");
+
+  await prisma.user.createMany({
+    data: [
+      {
+        restaurantId: restaurant.id,
+        email: "admin@demo-cafe.com",
+        passwordHash: adminPasswordHash,
+        name: "Demo Admin",
+        role: "ADMIN",
+      },
+      {
+        restaurantId: restaurant.id,
+        email: "staff@demo-cafe.com",
+        passwordHash: staffPasswordHash,
+        name: "Demo Garson",
+        role: "STAFF",
+      },
+    ],
   });
 
   const categories: { name: string; sortOrder: number; items: { name: string; price: string }[] }[] = [
@@ -125,6 +172,9 @@ async function main() {
   console.log("✅ Seed tamamlandı:");
   console.log(`   Restoran: ${restaurant.name} (${restaurant.id})`);
   console.log(`   5 masa, ${categories.length} kategori, ${itemCount} ürün oluşturuldu.`);
+  console.log("   Demo giriş bilgileri:");
+  console.log("     Admin → admin@demo-cafe.com / admin123");
+  console.log("     Staff → staff@demo-cafe.com / staff123");
 }
 
 main()
