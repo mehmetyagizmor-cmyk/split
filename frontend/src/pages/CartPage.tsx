@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../lib/api";
 import { useCart } from "../context/CartContext";
+import { CustomerNav } from "../components/CustomerNav";
+import { LoadingScreen } from "../components/StatusScreen";
 
 export function CartPage() {
   const { tableToken } = useParams<{ tableToken: string }>();
@@ -31,8 +33,12 @@ export function CartPage() {
     }
   }
 
+  if (!tableToken) {
+    return <LoadingScreen />;
+  }
+
   return (
-    <div className="min-h-screen bg-neutral-50 px-6 py-8">
+    <div className="min-h-screen bg-neutral-50 px-6 py-8 pb-24">
       <div className="mx-auto max-w-sm">
         <Link
           to={`/table/${tableToken}/menu`}
@@ -100,6 +106,8 @@ export function CartPage() {
           </>
         )}
       </div>
+
+      <CustomerNav tableToken={tableToken} active="menu" />
     </div>
   );
 }

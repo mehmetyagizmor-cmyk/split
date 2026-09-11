@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../lib/api";
 import { useLiveEvents } from "../hooks/useLiveEvents";
+import { CustomerNav } from "../components/CustomerNav";
+import { LoadingScreen, ErrorScreen } from "../components/StatusScreen";
 
 type LobbyResponse = {
   table: { label: string; status: string };
@@ -43,23 +45,15 @@ export function TableLobbyPage() {
   useLiveEvents(["participant-joined", "order-created", "payment-made"], load);
 
   if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
-        <p className="text-center text-neutral-600">{error}</p>
-      </div>
-    );
+    return <ErrorScreen message={error} />;
   }
 
-  if (!lobby) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400">Yükleniyor…</p>
-      </div>
-    );
+  if (!lobby || !tableToken) {
+    return <LoadingScreen />;
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 px-6 py-8">
+    <div className="min-h-screen bg-neutral-50 px-6 py-8 pb-24">
       <div className="mx-auto max-w-sm">
         <h1 className="text-2xl font-semibold text-neutral-900">
           {lobby.table.label}
@@ -105,6 +99,8 @@ export function TableLobbyPage() {
           Ortak Ürünler
         </Link>
       </div>
+
+      <CustomerNav tableToken={tableToken} active="lobby" />
     </div>
   );
 }

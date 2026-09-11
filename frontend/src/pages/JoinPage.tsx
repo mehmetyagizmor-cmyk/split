@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../lib/api";
+import { LoadingScreen, ErrorScreen } from "../components/StatusScreen";
 
 type TableInfo = {
   id: string;
@@ -69,19 +70,11 @@ export function JoinPage() {
   }
 
   if (loadError) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
-        <p className="text-center text-neutral-600">{loadError}</p>
-      </div>
-    );
+    return <ErrorScreen message={loadError} />;
   }
 
   if (!table) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400">Yükleniyor…</p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

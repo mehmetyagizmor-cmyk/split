@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../lib/api";
 import { useLiveEvents } from "../hooks/useLiveEvents";
+import { CustomerNav } from "../components/CustomerNav";
+import { LoadingScreen, ErrorScreen } from "../components/StatusScreen";
 
 type Participant = { id: string; name: string };
 
@@ -122,19 +124,11 @@ export function SharedItemsPage() {
   useLiveEvents(["order-created", "item-shared", "participant-joined"], load);
 
   if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
-        <p className="text-center text-neutral-600">{error}</p>
-      </div>
-    );
+    return <ErrorScreen message={error} />;
   }
 
-  if (!orders) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400">Yükleniyor…</p>
-      </div>
-    );
+  if (!orders || !tableToken) {
+    return <LoadingScreen />;
   }
 
   const allItems = orders.flatMap((order) =>
@@ -142,7 +136,7 @@ export function SharedItemsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-neutral-50 px-6 py-8">
+    <div className="min-h-screen bg-neutral-50 px-6 py-8 pb-24">
       <div className="mx-auto max-w-sm">
         <Link to={`/table/${tableToken}`} className="text-sm font-medium text-emerald-600">
           ← Masaya Dön
@@ -216,6 +210,8 @@ export function SharedItemsPage() {
           </ul>
         )}
       </div>
+
+      <CustomerNav tableToken={tableToken} />
     </div>
   );
 }

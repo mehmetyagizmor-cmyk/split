@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../lib/api";
 import { useCart } from "../context/CartContext";
+import { CustomerNav } from "../components/CustomerNav";
+import { LoadingScreen, ErrorScreen } from "../components/StatusScreen";
 
 type MenuItem = {
   id: string;
@@ -84,23 +86,15 @@ export function MenuPage() {
   }, [tableToken, navigate]);
 
   if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
-        <p className="text-center text-neutral-600">{error}</p>
-      </div>
-    );
+    return <ErrorScreen message={error} />;
   }
 
-  if (!categories) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400">Yükleniyor…</p>
-      </div>
-    );
+  if (!categories || !tableToken) {
+    return <LoadingScreen />;
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 px-6 py-8 pb-28">
+    <div className="min-h-screen bg-neutral-50 px-6 py-8 pb-40">
       <div className="mx-auto max-w-sm">
         <Link
           to={`/table/${tableToken}`}
@@ -143,12 +137,14 @@ export function MenuPage() {
       {totalCount > 0 && (
         <Link
           to={`/table/${tableToken}/cart`}
-          className="fixed inset-x-6 bottom-6 mx-auto flex max-w-sm items-center justify-between rounded-xl bg-emerald-600 px-5 py-4 text-white shadow-lg transition hover:bg-emerald-700"
+          className="fixed inset-x-6 bottom-20 z-30 mx-auto flex max-w-sm items-center justify-between rounded-xl bg-emerald-600 px-5 py-4 text-white shadow-lg transition hover:bg-emerald-700"
         >
           <span className="font-medium">Sepetim ({totalCount} ürün)</span>
           <span className="font-semibold">₺{totalPrice}</span>
         </Link>
       )}
+
+      <CustomerNav tableToken={tableToken} active="menu" />
     </div>
   );
 }
