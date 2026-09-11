@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../lib/api";
 
 type LobbyResponse = {
@@ -76,6 +76,13 @@ export function TableLobbyPage() {
             ₺{lobby.total}
           </p>
         </div>
+
+        <Link
+          to={`/table/${tableToken}/menu`}
+          className="mt-6 block w-full rounded-xl bg-emerald-600 py-3 text-center text-base font-medium text-white transition hover:bg-emerald-700"
+        >
+          Menüyü Gör
+        </Link>
       </div>
     </div>
   );

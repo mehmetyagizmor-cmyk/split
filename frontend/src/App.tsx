@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { JoinPage } from "./pages/JoinPage";
 import { TableLobbyPage } from "./pages/TableLobbyPage";
+import { MenuPage } from "./pages/MenuPage";
 
 /**
  * Uygulamanın kök route tanımları. Sonraki fazlarda /staff/*, /admin/*,
@@ -25,6 +26,7 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/join/:tableToken" element={<JoinPage />} />
       <Route path="/table/:tableToken" element={<TableLobbyPage />} />
+      <Route path="/table/:tableToken/menu" element={<MenuPage />} />
     </Routes>
   );
 }
