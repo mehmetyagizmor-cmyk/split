@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
-import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { ApiError } from "../lib/errors";
 import { signCustomerToken } from "../lib/customerToken";
 import { CUSTOMER_COOKIE_NAME } from "../middleware/customerAuth";
+import { sumLineItems } from "../lib/money";
 
 const CUSTOMER_COOKIE_MAX_AGE_MS = 12 * 60 * 60 * 1000; // customerToken'ın expiresIn'iyle aynı
 
@@ -186,14 +186,7 @@ export async function getLobby(req: Request, res: Response) {
     }),
   ]);
 
-  // Para toplamını Decimal.js üzerinden yapıyoruz — JS'in normal `+`/`*`
-  // operatörleri floating point yuvarlama hatası üretebilir.
-  let total = new Prisma.Decimal(0);
-  for (const order of orders) {
-    for (const item of order.items) {
-      total = total.plus(item.unitPrice.times(item.quantity));
-    }
-  }
+  const total = sumLineItems(orders.flatMap((order) => order.items));
 
   res.json({
     table: { label: table.label, status: table.status },

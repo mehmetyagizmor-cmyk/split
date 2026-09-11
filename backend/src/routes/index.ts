@@ -3,6 +3,7 @@ import { tablesRouter } from "./tables.routes";
 import { authRouter } from "./auth.routes";
 import { adminTablesRouter } from "./adminTables.routes";
 import { customerSessionRouter } from "./customerSession.routes";
+import { ordersRouter } from "./orders.routes";
 
 /**
  * Tüm API route'larının birleştiği yer. Yeni bir kaynak (orders, bills,
@@ -14,3 +15,4 @@ apiRouter.use("/tables", tablesRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/admin/tables", adminTablesRouter);
 apiRouter.use("/customer", customerSessionRouter);
+apiRouter.use("/orders", ordersRouter);

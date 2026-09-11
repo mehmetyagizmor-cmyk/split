@@ -2,10 +2,12 @@ import { Routes, Route } from "react-router-dom";
 import { JoinPage } from "./pages/JoinPage";
 import { TableLobbyPage } from "./pages/TableLobbyPage";
 import { MenuPage } from "./pages/MenuPage";
+import { CartPage } from "./pages/CartPage";
+import { OrdersPage } from "./pages/OrdersPage";
 
 /**
  * Uygulamanın kök route tanımları. Sonraki fazlarda /staff/*, /admin/*,
- * /menu, /bill gibi route'lar buraya eklenecek.
+ * /bill, /payment gibi route'lar buraya eklenecek.
  */
 function Home() {
   return (
@@ -27,6 +29,8 @@ function App() {
       <Route path="/join/:tableToken" element={<JoinPage />} />
       <Route path="/table/:tableToken" element={<TableLobbyPage />} />
       <Route path="/table/:tableToken/menu" element={<MenuPage />} />
+      <Route path="/table/:tableToken/cart" element={<CartPage />} />
+      <Route path="/table/:tableToken/orders" element={<OrdersPage />} />
     </Routes>
   );
 }
