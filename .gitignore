@@ -16,3 +16,6 @@ build/
 
 # Logs
 *.log
+
+# curl test cookie jarları (içinde JWT token olabilir)
+cookies.txt
