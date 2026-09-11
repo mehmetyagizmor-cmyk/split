@@ -27,3 +27,22 @@ export function useStaffAuth() {
 
   return staff;
 }
+
+/**
+ * Sadece ADMIN'e açık sayfalarda kullanılır — STAFF girişi ile buraya
+ * gelinirse dashboard'a geri gönderilir. Backend zaten aynı kısıtlamayı
+ * requireRole("ADMIN") ile uyguluyor, bu sadece frontend'de gereksiz bir
+ * "yetkiniz yok" ekranı göstermek yerine akıcı bir yönlendirme sağlıyor.
+ */
+export function useRequireAdmin() {
+  const staff = useStaffAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (staff && staff.role !== "ADMIN") {
+      navigate("/staff/dashboard", { replace: true });
+    }
+  }, [staff, navigate]);
+
+  return staff && staff.role === "ADMIN" ? staff : null;
+}

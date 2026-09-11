@@ -22,6 +22,22 @@ export function StaffHeader({ staff }: { staff: StaffUser }) {
             <Link to="/staff/orders" className="hover:text-emerald-600">
               Siparişler
             </Link>
+            {staff.role === "ADMIN" && (
+              <>
+                <Link to="/admin/dashboard" className="hover:text-emerald-600">
+                  Rapor
+                </Link>
+                <Link to="/admin/menu" className="hover:text-emerald-600">
+                  Menü
+                </Link>
+                <Link to="/admin/staff" className="hover:text-emerald-600">
+                  Personel
+                </Link>
+                <Link to="/admin/settings" className="hover:text-emerald-600">
+                  Ayarlar
+                </Link>
+              </>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-4 text-sm">

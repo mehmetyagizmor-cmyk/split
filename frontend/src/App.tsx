@@ -10,11 +10,12 @@ import { StaffLoginPage } from "./pages/staff/StaffLoginPage";
 import { StaffDashboardPage } from "./pages/staff/StaffDashboardPage";
 import { StaffTableDetailPage } from "./pages/staff/StaffTableDetailPage";
 import { StaffOrdersPage } from "./pages/staff/StaffOrdersPage";
+import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
+import { AdminMenuPage } from "./pages/admin/AdminMenuPage";
+import { AdminStaffPage } from "./pages/admin/AdminStaffPage";
+import { AdminSettingsPage } from "./pages/admin/AdminSettingsPage";
 
-/**
- * Uygulamanın kök route tanımları. Sonraki fazda /admin/* route'ları
- * buraya eklenecek.
- */
+/** Uygulamanın kök route tanımları. */
 function Home() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50">
@@ -44,6 +45,11 @@ function App() {
       <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
       <Route path="/staff/tables/:id" element={<StaffTableDetailPage />} />
       <Route path="/staff/orders" element={<StaffOrdersPage />} />
+
+      <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+      <Route path="/admin/menu" element={<AdminMenuPage />} />
+      <Route path="/admin/staff" element={<AdminStaffPage />} />
+      <Route path="/admin/settings" element={<AdminSettingsPage />} />
     </Routes>
   );
 }
