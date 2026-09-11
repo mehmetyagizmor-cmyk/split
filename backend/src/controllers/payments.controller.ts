@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import { ApiError } from "../lib/errors";
 import { computeBillBreakdown } from "../lib/billBreakdown";
 import { paymentProvider } from "../lib/paymentProvider";
+import { getIO, billRoom, restaurantRoom } from "../lib/socket";
 
 /**
  * POST /api/payments
@@ -13,7 +14,7 @@ import { paymentProvider } from "../lib/paymentProvider";
  */
 export async function createPayment(req: Request, res: Response) {
   const { tipAmount: tipAmountInput } = req.body as { tipAmount: string };
-  const { customerSessionId, restaurantId, billId, tableId } = req.customerSession!;
+  const { customerSessionId, restaurantId, billId, tableId, name } = req.customerSession!;
 
   const alreadyPaid = await prisma.payment.findFirst({
     where: { customerSessionId, status: "PAID" },
@@ -80,6 +81,11 @@ export async function createPayment(req: Request, res: Response) {
       prisma.table.update({ where: { id: tableId }, data: { status: "CLOSED" } }),
     ]);
     billClosed = true;
+  }
+
+  getIO().to(billRoom(billId)).emit("payment-made", { customerSessionId, name, billClosed });
+  if (billClosed) {
+    getIO().to(restaurantRoom(restaurantId)).emit("table-closed", { tableId });
   }
 
   res.status(201).json({

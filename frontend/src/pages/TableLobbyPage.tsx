@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../lib/api";
+import { useLiveEvents } from "../hooks/useLiveEvents";
 
 type LobbyResponse = {
   table: { label: string; status: string };
@@ -15,7 +16,7 @@ export function TableLobbyPage() {
   const [lobby, setLobby] = useState<LobbyResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function load() {
     if (!tableToken) return;
 
     // Önce bu tarayıcının gerçekten bu masaya katılmış olduğunu doğruluyoruz.
@@ -33,7 +34,13 @@ export function TableLobbyPage() {
           err instanceof ApiError ? err.message : "Masa bilgisi alınamadı",
         );
       });
-  }, [tableToken, navigate]);
+  }
+
+  useEffect(load, [tableToken, navigate]);
+
+  // Biri katılınca, sipariş verince ya da ödeme yapılınca liste/toplam
+  // otomatik güncellensin — sayfa yenilemeye gerek kalmadan.
+  useLiveEvents(["participant-joined", "order-created", "payment-made"], load);
 
   if (error) {
     return (

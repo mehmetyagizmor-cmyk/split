@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../lib/api";
+import { useLiveEvents } from "../hooks/useLiveEvents";
 
 type Bill = {
   personalItems: { id: string; name: string; quantity: number; unitPrice: string; lineTotal: string }[];
@@ -50,7 +51,7 @@ export function BillPage() {
   const [payError, setPayError] = useState<string | null>(null);
   const [result, setResult] = useState<PaymentResult | null>(null);
 
-  useEffect(() => {
+  function load() {
     if (!tableToken) return;
 
     apiFetch<Bill>("/customer/bill")
@@ -62,7 +63,13 @@ export function BillPage() {
         }
         setError(err instanceof ApiError ? err.message : "Hesap bilgisi alınamadı");
       });
-  }, [tableToken, navigate]);
+  }
+
+  useEffect(load, [tableToken, navigate]);
+
+  // Yeni sipariş verildiğinde ya da bir ürün paylaşıldığında hesap değişmiş
+  // olabilir — otomatik yenile.
+  useLiveEvents(["order-created", "item-shared"], load);
 
   async function handlePay() {
     if (!bill) return;

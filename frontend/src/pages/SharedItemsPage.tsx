@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../lib/api";
+import { useLiveEvents } from "../hooks/useLiveEvents";
 
 type Participant = { id: string; name: string };
 
@@ -115,6 +116,10 @@ export function SharedItemsPage() {
   }
 
   useEffect(load, [tableToken, navigate]);
+
+  // Yeni sipariş, yeni katılımcı ya da bir paylaşım değişikliği olduğunda
+  // listeyi otomatik tazele.
+  useLiveEvents(["order-created", "item-shared", "participant-joined"], load);
 
   if (error) {
     return (

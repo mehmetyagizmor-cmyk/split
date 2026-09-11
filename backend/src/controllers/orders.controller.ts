@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { ApiError } from "../lib/errors";
 import { sumLineItems, splitEvenly } from "../lib/money";
+import { getIO, billRoom, restaurantRoom } from "../lib/socket";
 
 type OrderItemInput = { menuItemId: string; quantity: number };
 
@@ -75,7 +76,13 @@ export async function createOrder(req: Request, res: Response) {
     include: { items: { include: { menuItem: { select: { name: true } } } } },
   });
 
-  res.status(201).json({ order: serializeOrder(order) });
+  const serialized = serializeOrder(order);
+  // Masadaki herkese (toplam güncellensin diye) ve — Phase 13'te kurulacak —
+  // personel paneline yeni siparişi canlı bildir.
+  getIO().to(billRoom(billId)).emit("order-created", serialized);
+  getIO().to(restaurantRoom(restaurantId)).emit("order-created", serialized);
+
+  res.status(201).json({ order: serialized });
 }
 
 /** GET /api/orders/my — sadece o an giriş yapmış müşterinin kendi siparişleri. */
@@ -203,6 +210,10 @@ export async function shareOrderItem(req: Request, res: Response) {
         ]
       : []),
   ]);
+
+  // Ürün paylaşıldı/paylaşımı kaldırıldı — masadaki herkesin hesabı
+  // değişmiş olabilir, canlı bildirip ilgili ekranların yenilenmesini sağlıyoruz.
+  getIO().to(billRoom(billId)).emit("item-shared", { orderItemId });
 
   res.json({ success: true });
 }

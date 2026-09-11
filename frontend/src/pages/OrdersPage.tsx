@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../lib/api";
+import { useLiveEvents } from "../hooks/useLiveEvents";
 
 type Order = {
   id: string;
@@ -43,7 +44,7 @@ export function OrdersPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function load() {
     if (!tableToken) return;
 
     apiFetch("/customer/me")
@@ -55,7 +56,13 @@ export function OrdersPage() {
         }
         setError(err instanceof ApiError ? err.message : "Siparişler alınamadı");
       });
-  }, [tableToken, navigate]);
+  }
+
+  useEffect(load, [tableToken, navigate]);
+
+  // Sipariş durumu personel tarafından değiştirildiğinde (Phase 13) veya
+  // yeni bir sipariş verildiğinde liste otomatik yenilensin.
+  useLiveEvents(["order-created", "order-status-changed"], load);
 
   if (error) {
     return (

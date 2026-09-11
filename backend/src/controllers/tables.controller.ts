@@ -4,6 +4,7 @@ import { ApiError } from "../lib/errors";
 import { signCustomerToken } from "../lib/customerToken";
 import { CUSTOMER_COOKIE_NAME } from "../middleware/customerAuth";
 import { sumLineItems } from "../lib/money";
+import { getIO, billRoom } from "../lib/socket";
 
 const CUSTOMER_COOKIE_MAX_AGE_MS = 12 * 60 * 60 * 1000; // customerToken'ın expiresIn'iyle aynı
 
@@ -137,6 +138,11 @@ export async function joinTable(req: Request, res: Response) {
     sameSite: "lax",
     maxAge: CUSTOMER_COOKIE_MAX_AGE_MS,
   });
+
+  // Masadaki diğer bağlı ekranlara (lobi) yeni katılımcıyı canlı bildir.
+  getIO()
+    .to(billRoom(bill.id))
+    .emit("participant-joined", { id: customerSession.id, name: customerSession.name });
 
   res.status(201).json({
     customerSession: { id: customerSession.id, name: customerSession.name },

@@ -1,4 +1,5 @@
 import express from "express";
+import { createServer } from "http";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -6,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import { apiRouter } from "./routes";
 import { errorHandler } from "./middleware/errorHandler";
+import { initSocket } from "./lib/socket";
 
 dotenv.config();
 
@@ -46,6 +48,11 @@ app.use("/api", apiRouter);
 // route'lardan next(err) ile gelen hataları buraya yönlendirmesi için.
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+// Socket.IO, Express'in kendi HTTP sunucusuna "binmesi" gerektiği için
+// app.listen yerine http.createServer(app) kullanıyoruz.
+const httpServer = createServer(app);
+initSocket(httpServer);
+
+httpServer.listen(PORT, () => {
   console.log(`✅ Backend çalışıyor: http://localhost:${PORT}`);
 });
