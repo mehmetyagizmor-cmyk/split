@@ -5,6 +5,8 @@ import { adminTablesRouter } from "./adminTables.routes";
 import { customerSessionRouter } from "./customerSession.routes";
 import { ordersRouter } from "./orders.routes";
 import { paymentsRouter } from "./payments.routes";
+import { adminOrdersRouter } from "./adminOrders.routes";
+import { adminMenuRouter } from "./adminMenu.routes";
 
 /**
  * Tüm API route'larının birleştiği yer. Yeni bir kaynak (orders, bills,
@@ -18,3 +20,5 @@ apiRouter.use("/admin/tables", adminTablesRouter);
 apiRouter.use("/customer", customerSessionRouter);
 apiRouter.use("/orders", ordersRouter);
 apiRouter.use("/payments", paymentsRouter);
+apiRouter.use("/admin/orders", adminOrdersRouter);
+apiRouter.use("/admin/menu", adminMenuRouter);

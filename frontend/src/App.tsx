@@ -6,10 +6,14 @@ import { CartPage } from "./pages/CartPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { BillPage } from "./pages/BillPage";
 import { SharedItemsPage } from "./pages/SharedItemsPage";
+import { StaffLoginPage } from "./pages/staff/StaffLoginPage";
+import { StaffDashboardPage } from "./pages/staff/StaffDashboardPage";
+import { StaffTableDetailPage } from "./pages/staff/StaffTableDetailPage";
+import { StaffOrdersPage } from "./pages/staff/StaffOrdersPage";
 
 /**
- * Uygulamanın kök route tanımları. Sonraki fazlarda /staff/*, /admin/*,
- * /payment gibi route'lar buraya eklenecek.
+ * Uygulamanın kök route tanımları. Sonraki fazda /admin/* route'ları
+ * buraya eklenecek.
  */
 function Home() {
   return (
@@ -35,6 +39,11 @@ function App() {
       <Route path="/table/:tableToken/orders" element={<OrdersPage />} />
       <Route path="/table/:tableToken/bill" element={<BillPage />} />
       <Route path="/table/:tableToken/shared-items" element={<SharedItemsPage />} />
+
+      <Route path="/staff/login" element={<StaffLoginPage />} />
+      <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
+      <Route path="/staff/tables/:id" element={<StaffTableDetailPage />} />
+      <Route path="/staff/orders" element={<StaffOrdersPage />} />
     </Routes>
   );
 }

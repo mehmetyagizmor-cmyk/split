@@ -4,7 +4,7 @@ import { ApiError } from "../lib/errors";
 import { signCustomerToken } from "../lib/customerToken";
 import { CUSTOMER_COOKIE_NAME } from "../middleware/customerAuth";
 import { sumLineItems } from "../lib/money";
-import { getIO, billRoom } from "../lib/socket";
+import { getIO, billRoom, restaurantRoom } from "../lib/socket";
 
 const CUSTOMER_COOKIE_MAX_AGE_MS = 12 * 60 * 60 * 1000; // customerToken'ın expiresIn'iyle aynı
 
@@ -99,10 +99,11 @@ export async function joinTable(req: Request, res: Response) {
     );
   }
 
-  const { customerSession, bill } = await prisma.$transaction(async (tx) => {
+  const { customerSession, bill, tableJustOccupied } = await prisma.$transaction(async (tx) => {
     let activeBill = await tx.bill.findFirst({
       where: { tableId: table.id, status: "OPEN" },
     });
+    let justOccupied = false;
 
     if (!activeBill) {
       activeBill = await tx.bill.create({
@@ -112,6 +113,7 @@ export async function joinTable(req: Request, res: Response) {
         where: { id: table.id },
         data: { status: "OCCUPIED" },
       });
+      justOccupied = true;
     }
 
     const newCustomerSession = await tx.customerSession.create({
@@ -122,7 +124,7 @@ export async function joinTable(req: Request, res: Response) {
       },
     });
 
-    return { customerSession: newCustomerSession, bill: activeBill };
+    return { customerSession: newCustomerSession, bill: activeBill, tableJustOccupied: justOccupied };
   });
 
   const customerToken = signCustomerToken({
@@ -139,10 +141,20 @@ export async function joinTable(req: Request, res: Response) {
     maxAge: CUSTOMER_COOKIE_MAX_AGE_MS,
   });
 
-  // Masadaki diğer bağlı ekranlara (lobi) yeni katılımcıyı canlı bildir.
-  getIO()
-    .to(billRoom(bill.id))
-    .emit("participant-joined", { id: customerSession.id, name: customerSession.name });
+  // Masadaki diğer bağlı ekranlara (lobi) VE personel paneline (masa detayı
+  // açıksa) yeni katılımcıyı canlı bildir — ikisi de ayrı odalarda olduğu
+  // için her ikisine de yayın yapmamız gerekiyor.
+  const participantPayload = { id: customerSession.id, name: customerSession.name, tableId: table.id };
+  getIO().to(billRoom(bill.id)).emit("participant-joined", participantPayload);
+  getIO().to(restaurantRoom(table.restaurantId)).emit("participant-joined", participantPayload);
+
+  // Masa AVAILABLE'dan OCCUPIED'a geçtiyse personel dashboard'undaki masa
+  // durumu rozetinin de güncellenmesi gerekiyor.
+  if (tableJustOccupied) {
+    getIO()
+      .to(restaurantRoom(table.restaurantId))
+      .emit("table-occupied", { tableId: table.id });
+  }
 
   res.status(201).json({
     customerSession: { id: customerSession.id, name: customerSession.name },

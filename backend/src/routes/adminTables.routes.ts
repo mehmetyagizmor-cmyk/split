@@ -2,16 +2,20 @@ import { Router } from "express";
 import { asyncHandler } from "../middleware/asyncHandler";
 import { validate } from "../middleware/validate";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { z } from "zod";
 import {
   createTableSchema,
   tableIdParamsSchema,
 } from "../schemas/table.schemas";
+import { createOrderForTableSchema } from "../schemas/adminOrder.schemas";
 import {
   listTables,
   createTable,
   regenerateTableToken,
   getTableQrCode,
+  getTableDetail,
 } from "../controllers/adminTables.controller";
+import { createOrderForTable } from "../controllers/adminOrders.controller";
 
 export const adminTablesRouter = Router();
 
@@ -27,6 +31,12 @@ adminTablesRouter.post(
 );
 
 adminTablesRouter.get(
+  "/:id",
+  validate({ params: tableIdParamsSchema }),
+  asyncHandler(getTableDetail),
+);
+
+adminTablesRouter.get(
   "/:id/qrcode",
   validate({ params: tableIdParamsSchema }),
   asyncHandler(getTableQrCode),
@@ -39,4 +49,12 @@ adminTablesRouter.post(
   requireRole("ADMIN"),
   validate({ params: tableIdParamsSchema }),
   asyncHandler(regenerateTableToken),
+);
+
+const tableIdPathParamSchema = z.object({ tableId: z.uuid() });
+
+adminTablesRouter.post(
+  "/:tableId/orders",
+  validate({ params: tableIdPathParamSchema, body: createOrderForTableSchema }),
+  asyncHandler(createOrderForTable),
 );

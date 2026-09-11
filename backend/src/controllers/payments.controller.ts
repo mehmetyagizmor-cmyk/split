@@ -83,7 +83,9 @@ export async function createPayment(req: Request, res: Response) {
     billClosed = true;
   }
 
-  getIO().to(billRoom(billId)).emit("payment-made", { customerSessionId, name, billClosed });
+  const paymentPayload = { customerSessionId, name, billClosed, tableId };
+  getIO().to(billRoom(billId)).emit("payment-made", paymentPayload);
+  getIO().to(restaurantRoom(restaurantId)).emit("payment-made", paymentPayload);
   if (billClosed) {
     getIO().to(restaurantRoom(restaurantId)).emit("table-closed", { tableId });
   }
