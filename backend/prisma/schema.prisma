@@ -55,10 +55,13 @@ enum PaymentStatus {
 /// Her restoran ayrı bir "tenant"tır. Tüm ana modellerde restaurantId
 /// zorunlu tutularak restoranlar arası veri sızıntısı şema seviyesinde engellenir.
 model Restaurant {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(uuid())
+  name              String
+  // Hesap toplamına eklenen servis ücreti yüzdesi (örn. 10.00 = %10).
+  // Admin panelinden (Phase 14) değiştirilebilecek, şimdilik varsayılan 0.
+  serviceFeePercent Decimal  @default(0) @db.Decimal(5, 2)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   users            User[]
   tables           Table[]

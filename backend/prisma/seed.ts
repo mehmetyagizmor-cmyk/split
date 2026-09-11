@@ -42,7 +42,7 @@ async function main() {
   }
 
   const restaurant = await prisma.restaurant.create({
-    data: { name: "Demo Cafe" },
+    data: { name: "Demo Cafe", serviceFeePercent: "10.00" },
   });
 
   await prisma.table.createMany({

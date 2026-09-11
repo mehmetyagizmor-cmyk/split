@@ -4,10 +4,11 @@ import { TableLobbyPage } from "./pages/TableLobbyPage";
 import { MenuPage } from "./pages/MenuPage";
 import { CartPage } from "./pages/CartPage";
 import { OrdersPage } from "./pages/OrdersPage";
+import { BillPage } from "./pages/BillPage";
 
 /**
  * Uygulamanın kök route tanımları. Sonraki fazlarda /staff/*, /admin/*,
- * /bill, /payment gibi route'lar buraya eklenecek.
+ * /payment gibi route'lar buraya eklenecek.
  */
 function Home() {
   return (
@@ -31,6 +32,7 @@ function App() {
       <Route path="/table/:tableToken/menu" element={<MenuPage />} />
       <Route path="/table/:tableToken/cart" element={<CartPage />} />
       <Route path="/table/:tableToken/orders" element={<OrdersPage />} />
+      <Route path="/table/:tableToken/bill" element={<BillPage />} />
     </Routes>
   );
 }

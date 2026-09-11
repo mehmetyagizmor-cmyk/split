@@ -1,9 +1,13 @@
 import { Router } from "express";
+import { asyncHandler } from "../middleware/asyncHandler";
 import { requireCustomerSession } from "../middleware/customerAuth";
 import { getCustomerMe } from "../controllers/customerSession.controller";
+import { getMyBill } from "../controllers/customerBill.controller";
 
 export const customerSessionRouter = Router();
 
-// getCustomerMe senkron (req.customerSession'ı doğrudan döndürüyor), asyncHandler'a
-// gerek yok — asenkron doğrulama zaten requireCustomerSession içinde yapılıyor.
-customerSessionRouter.get("/me", requireCustomerSession, getCustomerMe);
+customerSessionRouter.use(requireCustomerSession);
+
+// getCustomerMe senkron (req.customerSession'ı doğrudan döndürüyor), asyncHandler'a gerek yok.
+customerSessionRouter.get("/me", getCustomerMe);
+customerSessionRouter.get("/bill", asyncHandler(getMyBill));
