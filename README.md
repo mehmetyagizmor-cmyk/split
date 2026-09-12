@@ -56,6 +56,10 @@ Deploy etmeden önce:
 3. **Veritabanı migration'ı**: `prisma migrate dev` yerine `npm run db:migrate:deploy` kullanılmalı (etkileşimli olmayan, production için güvenli komut).
 4. **Build**: backend `npm run build`, frontend `npm run build` — ikisi de hatasız tamamlanmalı.
 5. Frontend'in statik hosting'de (Vercel) client-side routing'in çalışması için `frontend/vercel.json` zaten hazır.
+6. **Render (ya da benzeri) Build Command'ı**: `NODE_ENV=production` ortam değişkeni build sırasında da geçerli olduğu için, `npm install` devDependencies'i (TypeScript tip tanımları, `prisma` CLI vb.) atlayabilir ve `tsc` "Could not find a declaration file" hatasıyla başarısız olur. Build Command'ı şu şekilde ayarla:
+   ```
+   npm install --include=dev && npm run build
+   ```
 
 ## Proje Durumu
 
