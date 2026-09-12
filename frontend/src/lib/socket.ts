@@ -1,7 +1,11 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") ??
-  "http://localhost:4000";
+// VITE_API_URL production'da "/api" (göreli, aynı origin) olabilir — bu
+// durumda "/api" ekini silince geriye boş string kalır, ki bu da socket.io'ya
+// "şu an sayfanın açık olduğu origin'e bağlan" demenin doğru yolu değil;
+// bunun için argümanı hiç vermemek (undefined) gerekiyor.
+const rawUrl = import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "");
+const SOCKET_URL = rawUrl && rawUrl.length > 0 ? rawUrl : undefined;
 
 /**
  * Uygulama boyunca tek bir socket bağlantısı. `withCredentials: true` —

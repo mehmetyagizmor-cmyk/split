@@ -52,7 +52,8 @@ Deploy etmeden önce:
    - `JWT_SECRET` — rastgele, güçlü, geliştirmedekinden **farklı** bir değer.
    - `FRONTEND_URL` — gerçek frontend domain'i (örn. `https://split.vercel.app`, sonunda `/` olmadan).
    - `DATABASE_URL` / `DIRECT_URL` — Neon'un production branch'i (ya da ayrı bir production veritabanı).
-2. **Frontend ortam değişkeni** (Vercel panelinden, **build'den önce**): `VITE_API_URL` gerçek backend URL'ine ayarlanmalı — Vite bunu build anında koda gömüyor, sonradan değiştirmek yeniden build gerektirir.
+2. **Frontend ortam değişkeni** (Vercel panelinden, **build'den önce**): `VITE_API_URL=/api` (göreli yol — backend'in tam URL'i DEĞİL). Vite bunu build anında koda gömüyor, sonradan değiştirmek yeniden build gerektirir.
+   - **Neden göreli yol?** Backend'e doğrudan farklı bir domain'den (örn. `onrender.com`) istek atılırsa, tarayıcılar (özellikle **Safari**, Intelligent Tracking Prevention ile) oturum çerezini "üçüncü taraf çerez" sayıp tamamen engelliyor — kullanıcı isim girip masaya katılsa bile bir sonraki sayfada tekrar isim formuna düşüyor. Çözüm: `frontend/vercel.json`'daki rewrite kuralları `/api/*` ve `/socket.io/*` isteklerini arka planda gerçek backend'e yönlendiriyor; tarayıcı hep kendi (Vercel) domain'iyle konuştuğunu sanıyor, çerez birinci taraf gibi davranıyor.
 3. **Veritabanı migration'ı**: `prisma migrate dev` yerine `npm run db:migrate:deploy` kullanılmalı (etkileşimli olmayan, production için güvenli komut).
 4. **Build**: backend `npm run build`, frontend `npm run build` — ikisi de hatasız tamamlanmalı.
 5. Frontend'in statik hosting'de (Vercel) client-side routing'in çalışması için `frontend/vercel.json` zaten hazır.
