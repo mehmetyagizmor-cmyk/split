@@ -61,6 +61,15 @@ Deploy etmeden önce:
    npm install --include=dev && npm run build
    ```
 
+## Canlı Ortam
+
+- **Frontend (Vercel):** https://split-swart-alpha.vercel.app
+- **Backend (Render):** https://split-j2yj.onrender.com
+
+Demo giriş bilgileri (`/staff/login`): `admin@demo-cafe.com` / `admin123` (ADMIN), `staff@demo-cafe.com` / `staff123` (STAFF).
+
+> Not: Backend ücretsiz Render planında çalışıyor — birkaç dakika kullanılmazsa "uykuya" geçer, tekrar bir istek geldiğinde uyanması ~30-60 saniye sürebilir. Bu bir hata değil, ücretsiz planın doğal davranışı.
+
 ## Proje Durumu
 
-Geliştirme aşamalı (phase'ler halinde) yürütülüyor. Şu an: **Phase 17 — Production Hazırlığı** tamamlandı.
+Geliştirme aşamalı (phase'ler halinde) yürütülüyor. Şu an: **Phase 18 — Deployment** tamamlandı, uygulama canlıda.
