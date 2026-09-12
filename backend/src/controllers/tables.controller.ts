@@ -134,10 +134,14 @@ export async function joinTable(req: Request, res: Response) {
     restaurantId: table.restaurantId,
   });
 
+  // Neden sameSite/secure production'da farklı: bkz. auth.controller.ts'teki
+  // login() — frontend ve backend production'da farklı domain'lerde olacağı
+  // için SameSite=Lax cookie'nin hiç gönderilmemesine yol açardı.
+  const isProduction = process.env.NODE_ENV === "production";
   res.cookie(CUSTOMER_COOKIE_NAME, customerToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     maxAge: CUSTOMER_COOKIE_MAX_AGE_MS,
   });
 

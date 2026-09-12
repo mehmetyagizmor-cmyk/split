@@ -37,10 +37,18 @@ export async function login(req: Request, res: Response) {
     role: user.role,
   });
 
+  const isProduction = process.env.NODE_ENV === "production";
   res.cookie(AUTH_COOKIE_NAME, token, {
     httpOnly: true, // JavaScript'ten erişilemez — XSS ile çalınamaz
-    secure: process.env.NODE_ENV === "production", // prod'da sadece HTTPS
-    sameSite: "lax",
+    secure: isProduction, // prod'da sadece HTTPS
+    // Geliştirmede frontend (5173) ve backend (4000) aynı "site" (localhost),
+    // sadece port farklı — SameSite=Lax yeterli. Production'da ise frontend
+    // (vercel.app) ve backend (onrender.com) GERÇEKTEN farklı domain'ler
+    // olacak; SameSite=Lax bu durumda cookie'nin hiç gönderilmemesine
+    // (yani oturumun tamamen çalışmamasına) yol açardı. SameSite=None,
+    // tarayıcı kuralı gereği sadece Secure (HTTPS) ile birlikte kullanılabilir
+    // — bu yüzden ikisini birlikte, sadece production'da açıyoruz.
+    sameSite: isProduction ? "none" : "lax",
     maxAge: COOKIE_MAX_AGE_MS,
   });
 
@@ -57,7 +65,15 @@ export async function login(req: Request, res: Response) {
 
 /** POST /api/auth/logout */
 export async function logout(_req: Request, res: Response) {
-  res.clearCookie(AUTH_COOKIE_NAME);
+  // clearCookie'nin tarayıcıda gerçekten silinmesi için, cookie'yi
+  // set ederken kullandığımız SameSite/Secure değerleriyle birebir
+  // eşleşmesi gerekiyor — aksi halde bazı tarayıcılar cookie'yi silmez.
+  const isProduction = process.env.NODE_ENV === "production";
+  res.clearCookie(AUTH_COOKIE_NAME, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+  });
   res.json({ success: true });
 }
 
