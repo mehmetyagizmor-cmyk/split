@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { apiFetch, ApiError } from "../../lib/api";
 import { useRequireAdmin } from "../../hooks/useStaffAuth";
 import { StaffHeader } from "../../components/StaffHeader";
+import { LoadingScreen } from "../../components/StatusScreen";
 
 type Report = {
   range: "today" | "month";
@@ -28,9 +29,7 @@ export function AdminDashboardPage() {
 
   if (!staff) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400">Yükleniyor…</p>
-      </div>
+      <LoadingScreen />
     );
   }
 
@@ -68,19 +67,19 @@ export function AdminDashboardPage() {
         ) : (
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-              <p className="text-sm text-neutral-500">Toplam Ciro</p>
+              <p className="text-sm font-medium text-neutral-500">Toplam Ciro</p>
               <p className="mt-1 text-2xl font-semibold text-neutral-900">₺{report.totalRevenue}</p>
             </div>
             <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-              <p className="text-sm text-neutral-500">Bahşişler</p>
+              <p className="text-sm font-medium text-neutral-500">Bahşişler</p>
               <p className="mt-1 text-2xl font-semibold text-neutral-900">₺{report.totalTips}</p>
             </div>
             <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-              <p className="text-sm text-neutral-500">Ödeme Sayısı</p>
+              <p className="text-sm font-medium text-neutral-500">Ödeme Sayısı</p>
               <p className="mt-1 text-2xl font-semibold text-neutral-900">{report.paymentCount}</p>
             </div>
             <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-              <p className="text-sm text-neutral-500">Sipariş Sayısı</p>
+              <p className="text-sm font-medium text-neutral-500">Sipariş Sayısı</p>
               <p className="mt-1 text-2xl font-semibold text-neutral-900">{report.orderCount}</p>
             </div>
           </div>

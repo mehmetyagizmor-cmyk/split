@@ -3,6 +3,7 @@ import { apiFetch, ApiError } from "../../lib/api";
 import { useStaffAuth } from "../../hooks/useStaffAuth";
 import { useLiveEvents } from "../../hooks/useLiveEvents";
 import { StaffHeader } from "../../components/StaffHeader";
+import { LoadingScreen } from "../../components/StatusScreen";
 
 type OrderStatus = "PENDING" | "CONFIRMED" | "PREPARING" | "READY" | "SERVED" | "CANCELLED";
 
@@ -68,9 +69,7 @@ export function StaffOrdersPage() {
 
   if (!staff) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400">Yükleniyor…</p>
-      </div>
+      <LoadingScreen />
     );
   }
 
@@ -109,7 +108,7 @@ export function StaffOrdersPage() {
                   <select
                     value={order.status}
                     onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
-                    className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm"
+                    className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                   >
                     {STATUS_OPTIONS.map((status) => (
                       <option key={status} value={status}>

@@ -26,7 +26,7 @@ function QuantityStepper({ item }: { item: MenuItem }) {
     return (
       <button
         onClick={() => addItem({ menuItemId: item.id, name: item.name, price: item.price })}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-lg font-medium text-white transition hover:bg-emerald-700"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-lg font-medium text-white transition hover:bg-emerald-700"
         aria-label={`${item.name} ekle`}
       >
         +
@@ -38,7 +38,7 @@ function QuantityStepper({ item }: { item: MenuItem }) {
     <div className="flex shrink-0 items-center gap-3">
       <button
         onClick={() => decreaseItem(item.id)}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-lg font-medium text-neutral-700 transition hover:bg-neutral-200"
+        className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-lg font-medium text-neutral-700 transition hover:bg-neutral-200"
         aria-label={`${item.name} azalt`}
       >
         −
@@ -46,7 +46,7 @@ function QuantityStepper({ item }: { item: MenuItem }) {
       <span className="w-4 text-center font-medium text-neutral-900">{quantity}</span>
       <button
         onClick={() => addItem({ menuItemId: item.id, name: item.name, price: item.price })}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-lg font-medium text-white transition hover:bg-emerald-700"
+        className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-lg font-medium text-white transition hover:bg-emerald-700"
         aria-label={`${item.name} ekle`}
       >
         +
@@ -107,7 +107,7 @@ export function MenuPage() {
         <div className="mt-6 space-y-8">
           {categories.map((category) => (
             <section key={category.id}>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
                 {category.name}
               </h2>
               <ul className="mt-3 space-y-2">

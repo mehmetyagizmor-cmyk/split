@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { apiFetch, ApiError } from "../../lib/api";
 import { useRequireAdmin } from "../../hooks/useStaffAuth";
 import { StaffHeader } from "../../components/StaffHeader";
+import { LoadingScreen } from "../../components/StatusScreen";
 
 type MenuItem = {
   id: string;
@@ -49,13 +50,13 @@ function NewItemForm({ categoryId, onCreated }: { categoryId: string; onCreated:
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Yeni ürün adı"
-        className="flex-1 rounded-lg border border-neutral-300 px-3 py-1.5 text-sm"
+        className="flex-1 rounded-lg border border-neutral-300 px-3 py-1.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
       />
       <input
         value={price}
         onChange={(e) => setPrice(e.target.value)}
         placeholder="Fiyat"
-        className="w-24 rounded-lg border border-neutral-300 px-3 py-1.5 text-sm"
+        className="w-24 rounded-lg border border-neutral-300 px-3 py-1.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
       />
       <button
         type="submit"
@@ -146,9 +147,7 @@ export function AdminMenuPage() {
 
   if (!staff) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400">Yükleniyor…</p>
-      </div>
+      <LoadingScreen />
     );
   }
 
@@ -164,7 +163,7 @@ export function AdminMenuPage() {
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value)}
             placeholder="Yeni kategori adı"
-            className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
           />
           <button
             type="submit"
@@ -190,7 +189,7 @@ export function AdminMenuPage() {
                   <h2 className="font-semibold text-neutral-900">{category.name}</h2>
                   <button
                     onClick={() => handleDeleteCategory(category.id)}
-                    className="text-sm font-medium text-neutral-400 hover:text-red-600"
+                    className="text-sm font-medium text-neutral-500 hover:text-red-600"
                   >
                     Kategoriyi Sil
                   </button>
@@ -219,11 +218,11 @@ export function AdminMenuPage() {
                       <input
                         defaultValue={item.price}
                         onBlur={(e) => handlePriceChange(item, e.target.value)}
-                        className="w-20 rounded-lg border border-neutral-300 px-2 py-1 text-sm"
+                        className="w-20 rounded-lg border border-neutral-300 px-2 py-1 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                       />
                       <button
                         onClick={() => handleDeleteItem(item.id)}
-                        className="text-sm font-medium text-neutral-400 hover:text-red-600"
+                        className="text-sm font-medium text-neutral-500 hover:text-red-600"
                       >
                         Sil
                       </button>

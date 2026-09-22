@@ -143,7 +143,7 @@ export function BillPage() {
         </p>
 
         <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-          <p className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+          <p className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
             Kişisel Ürünler
           </p>
           {bill.personalItems.length === 0 ? (
@@ -164,7 +164,7 @@ export function BillPage() {
 
         {bill.sharedItems.length > 0 && (
           <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-            <p className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+            <p className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
               Ortak Ürünlerden Payım
             </p>
             <ul className="mt-3 space-y-1">
@@ -194,7 +194,7 @@ export function BillPage() {
         </div>
 
         <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-          <p className="text-sm font-semibold uppercase tracking-wide text-neutral-400">Bahşiş</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-neutral-500">Bahşiş</p>
           <div className="mt-3 grid grid-cols-4 gap-2">
             {TIP_PRESETS.map((percent) => (
               <button

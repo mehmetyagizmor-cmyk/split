@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { apiFetch, ApiError } from "../../lib/api";
 import { useRequireAdmin } from "../../hooks/useStaffAuth";
 import { StaffHeader } from "../../components/StaffHeader";
+import { LoadingScreen } from "../../components/StatusScreen";
 
 type Settings = { name: string; serviceFeePercent: string };
 
@@ -45,9 +46,7 @@ export function AdminSettingsPage() {
 
   if (!staff || !loaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400">Yükleniyor…</p>
-      </div>
+      <LoadingScreen />
     );
   }
 
@@ -67,7 +66,7 @@ export function AdminSettingsPage() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
             />
           </div>
           <div>
@@ -75,9 +74,9 @@ export function AdminSettingsPage() {
             <input
               value={serviceFeePercent}
               onChange={(e) => setServiceFeePercent(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
             />
-            <p className="mt-1 text-xs text-neutral-400">
+            <p className="mt-1 text-xs text-neutral-500">
               Müşterilerin hesabına eklenen servis ücreti yüzdesi (örn. 10.00).
             </p>
           </div>

@@ -67,7 +67,7 @@ export function CartPage() {
                   <div className="flex shrink-0 items-center gap-3">
                     <button
                       onClick={() => decreaseItem(line.menuItemId)}
-                      className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-lg font-medium text-neutral-700 transition hover:bg-neutral-200"
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-lg font-medium text-neutral-700 transition hover:bg-neutral-200"
                       aria-label={`${line.name} azalt`}
                     >
                       −
@@ -77,7 +77,7 @@ export function CartPage() {
                     </span>
                     <button
                       onClick={() => addItem(line)}
-                      className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-lg font-medium text-white transition hover:bg-emerald-700"
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-lg font-medium text-white transition hover:bg-emerald-700"
                       aria-label={`${line.name} ekle`}
                     >
                       +
@@ -92,7 +92,7 @@ export function CartPage() {
                 <p className="text-sm font-medium text-neutral-500">Ürünler Toplamı</p>
                 <p className="text-2xl font-semibold text-neutral-900">₺{totalPrice}</p>
               </div>
-              <p className="mt-1 text-xs text-neutral-400">
+              <p className="mt-1 text-xs text-neutral-500">
                 Servis ücreti ödeme sırasında hesaplanır.
               </p>
             </div>

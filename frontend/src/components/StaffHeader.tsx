@@ -12,10 +12,10 @@ export function StaffHeader({ staff }: { staff: StaffUser }) {
 
   return (
     <header className="border-b border-neutral-200 bg-white">
-      <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-6">
+      <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <span className="font-semibold text-neutral-900">Split — Personel</span>
-          <nav className="flex gap-4 text-sm font-medium text-neutral-600">
+          <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium text-neutral-600">
             <Link to="/staff/dashboard" className="hover:text-emerald-600">
               Masalar
             </Link>
@@ -44,7 +44,7 @@ export function StaffHeader({ staff }: { staff: StaffUser }) {
           <span className="text-neutral-500">
             {staff.name} <span className="text-neutral-400">({staff.role})</span>
           </span>
-          <button onClick={handleLogout} className="font-medium text-neutral-600 hover:text-red-600">
+          <button onClick={handleLogout} className="font-medium text-neutral-500 hover:text-red-600">
             Çıkış
           </button>
         </div>

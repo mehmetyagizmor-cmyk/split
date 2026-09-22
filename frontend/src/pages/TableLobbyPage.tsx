@@ -73,7 +73,7 @@ export function TableLobbyPage() {
 
         <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
           <p className="text-sm font-medium text-neutral-500">Masa Toplamı</p>
-          <p className="mt-1 text-3xl font-semibold text-neutral-900">
+          <p className="mt-1 text-2xl font-semibold text-neutral-900">
             ₺{lobby.total}
           </p>
         </div>

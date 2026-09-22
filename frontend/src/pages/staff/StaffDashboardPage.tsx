@@ -4,6 +4,7 @@ import { apiFetch, ApiError } from "../../lib/api";
 import { useStaffAuth } from "../../hooks/useStaffAuth";
 import { useLiveEvents } from "../../hooks/useLiveEvents";
 import { StaffHeader } from "../../components/StaffHeader";
+import { LoadingScreen } from "../../components/StatusScreen";
 
 type Table = {
   id: string;
@@ -65,9 +66,7 @@ export function StaffDashboardPage() {
 
   if (!staff) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400">Yükleniyor…</p>
-      </div>
+      <LoadingScreen />
     );
   }
 
@@ -84,12 +83,12 @@ export function StaffDashboardPage() {
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             placeholder="Yeni masa adı (örn. Masa 6)"
-            className="flex-1 rounded-xl border border-neutral-300 px-4 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+            className="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
           />
           <button
             type="submit"
             disabled={!newLabel.trim() || creating}
-            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-neutral-300"
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-neutral-300"
           >
             + Masa Ekle
           </button>

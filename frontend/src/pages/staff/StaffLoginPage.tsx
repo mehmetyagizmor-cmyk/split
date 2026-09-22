@@ -37,7 +37,7 @@ export function StaffLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-6">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm ring-1 ring-neutral-200">
-        <h1 className="text-xl font-semibold text-neutral-900">Personel Girişi</h1>
+        <h1 className="text-2xl font-semibold text-neutral-900">Personel Girişi</h1>
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <input
             type="email"

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { apiFetch, ApiError } from "../../lib/api";
 import { useRequireAdmin } from "../../hooks/useStaffAuth";
 import { StaffHeader } from "../../components/StaffHeader";
+import { LoadingScreen } from "../../components/StatusScreen";
 
 type StaffMember = {
   id: string;
@@ -64,9 +65,7 @@ export function AdminStaffPage() {
 
   if (!staff) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400">Yükleniyor…</p>
-      </div>
+      <LoadingScreen />
     );
   }
 
@@ -79,18 +78,18 @@ export function AdminStaffPage() {
 
         <form
           onSubmit={handleCreate}
-          className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-neutral-200"
+          className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200"
         >
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="İsim"
-            className="col-span-2 rounded-lg border border-neutral-300 px-3 py-2 text-sm sm:col-span-1"
+            className="col-span-2 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 sm:col-span-1"
           />
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as "ADMIN" | "STAFF")}
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
           >
             <option value="STAFF">Personel</option>
             <option value="ADMIN">Admin</option>
@@ -100,14 +99,14 @@ export function AdminStaffPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="E-posta"
             type="email"
-            className="col-span-2 rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            className="col-span-2 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
           />
           <input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Şifre (en az 6 karakter)"
             type="password"
-            className="col-span-2 rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            className="col-span-2 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
           />
           <button
             type="submit"

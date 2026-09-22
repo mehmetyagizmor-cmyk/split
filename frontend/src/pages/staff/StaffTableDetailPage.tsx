@@ -4,6 +4,7 @@ import { apiFetch, ApiError } from "../../lib/api";
 import { useStaffAuth } from "../../hooks/useStaffAuth";
 import { useLiveEvents } from "../../hooks/useLiveEvents";
 import { StaffHeader } from "../../components/StaffHeader";
+import { LoadingScreen } from "../../components/StatusScreen";
 
 type OrderStatus = "PENDING" | "CONFIRMED" | "PREPARING" | "READY" | "SERVED" | "CANCELLED";
 
@@ -134,9 +135,7 @@ export function StaffTableDetailPage() {
 
   if (!staff || !detail) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400">Yükleniyor…</p>
-      </div>
+      <LoadingScreen />
     );
   }
 
@@ -155,7 +154,7 @@ export function StaffTableDetailPage() {
         <div className="mt-6 grid gap-6 sm:grid-cols-2">
           {/* QR kod */}
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-            <p className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+            <p className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
               Masa QR Kodu
             </p>
             <img
@@ -176,7 +175,7 @@ export function StaffTableDetailPage() {
 
           {/* Katılımcılar */}
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-            <p className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+            <p className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
               Katılımcılar
             </p>
             {!detail.bill ? (
@@ -187,7 +186,7 @@ export function StaffTableDetailPage() {
                   <li key={p.id} className="flex items-center justify-between text-sm">
                     <span className="text-neutral-800">{p.name}</span>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                         p.paymentStatus === "PAID"
                           ? "bg-emerald-100 text-emerald-800"
                           : "bg-neutral-100 text-neutral-600"
@@ -211,14 +210,14 @@ export function StaffTableDetailPage() {
           <>
             {/* Sipariş ekle */}
             <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-              <p className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+              <p className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
                 Sipariş Ekle
               </p>
               <form onSubmit={handleAddOrder} className="mt-3 flex flex-wrap items-end gap-2">
                 <select
                   value={selectedCustomerId}
                   onChange={(e) => setSelectedCustomerId(e.target.value)}
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 >
                   <option value="">Kişi seç…</option>
                   {detail.bill.participants.map((p) => (
@@ -230,7 +229,7 @@ export function StaffTableDetailPage() {
                 <select
                   value={selectedMenuItemId}
                   onChange={(e) => setSelectedMenuItemId(e.target.value)}
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 >
                   <option value="">Ürün seç…</option>
                   {menu?.map((category) => (
@@ -249,7 +248,7 @@ export function StaffTableDetailPage() {
                   max={50}
                   value={quantity}
                   onChange={(e) => setQuantity(Number(e.target.value))}
-                  className="w-20 rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                  className="w-20 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 />
                 <button
                   type="submit"
@@ -273,7 +272,7 @@ export function StaffTableDetailPage() {
                     <select
                       value={order.status}
                       onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
-                      className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm"
+                      className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                     >
                       {STATUS_OPTIONS.map((status) => (
                         <option key={status} value={status}>
