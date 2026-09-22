@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
 import { app } from "../src/app";
+import { prisma } from "../src/lib/prisma";
 import {
   createTestRestaurant,
   createTestTable,
@@ -41,6 +42,14 @@ describe("Sipariş sistemi — doğru müşteriye bağlanma (senaryo 4)", () => 
 
     const myOrdersRes = await request(app).get("/api/orders/my").set("Cookie", cookie);
     expect(myOrdersRes.body.orders).toHaveLength(1);
+
+    // Ödeme-önce-sipariş: sipariş oluşurken o siparişe bağlı, PAID bir
+    // Payment kaydı da otomatik oluşmuş olmalı.
+    const payment = await prisma.payment.findFirst({
+      where: { orderId: orderRes.body.order.id },
+    });
+    expect(payment?.status).toBe("PAID");
+    expect(payment?.itemsAmount.toFixed(2)).toBe("200.00");
   });
 
   it("başka bir müşteri bu siparişi KENDİ /orders/my listesinde göremiyor", async () => {

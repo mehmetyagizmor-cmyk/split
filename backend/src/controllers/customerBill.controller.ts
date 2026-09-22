@@ -11,8 +11,12 @@ export async function getMyBill(req: Request, res: Response) {
 
   const [breakdown, latestPayment] = await Promise.all([
     computeBillBreakdown(customerSessionId, restaurantId),
+    // orderId: null — sadece "kapanış" ödemeleri burada dikkate alınır.
+    // Sipariş verirken yapılan peşin ödemeler (orderId dolu) bu ekranın
+    // "zaten ödediniz" makbuzunu tetiklememeli, yoksa müşteri henüz hesabını
+    // kapatmadan makbuz ekranına kilitlenir.
     prisma.payment.findFirst({
-      where: { customerSessionId },
+      where: { customerSessionId, orderId: null },
       orderBy: { createdAt: "desc" },
     }),
   ]);

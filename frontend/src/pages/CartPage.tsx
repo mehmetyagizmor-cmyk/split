@@ -89,19 +89,25 @@ export function CartPage() {
 
             <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-neutral-500">Toplam</p>
+                <p className="text-sm font-medium text-neutral-500">Ürünler Toplamı</p>
                 <p className="text-2xl font-semibold text-neutral-900">₺{totalPrice}</p>
               </div>
+              <p className="mt-1 text-xs text-neutral-400">
+                Servis ücreti ödeme sırasında hesaplanır.
+              </p>
             </div>
 
             {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
+            <p className="mt-6 text-center text-xs text-neutral-500">
+              Siparişiniz mutfağa gitmeden önce ödeme alınır.
+            </p>
             <button
               onClick={handlePlaceOrder}
               disabled={submitting}
-              className="mt-6 w-full rounded-xl bg-emerald-600 py-3 text-base font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-neutral-300"
+              className="mt-2 w-full rounded-xl bg-emerald-600 py-3 text-base font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-neutral-300"
             >
-              {submitting ? "Gönderiliyor…" : "Sipariş Ver"}
+              {submitting ? "Ödeniyor…" : "Öde ve Sipariş Ver"}
             </button>
           </>
         )}

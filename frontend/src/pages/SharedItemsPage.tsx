@@ -14,6 +14,7 @@ type BillOrderItem = {
   unitPrice: string;
   lineTotal: string;
   isShared: boolean;
+  isPaid: boolean;
   sharedWith: { customerSessionId: string; name: string; shareAmount: string }[];
 };
 
@@ -164,13 +165,18 @@ export function SharedItemsPage() {
                       {orderedBy.name} sipariş etti · ₺{item.lineTotal}
                     </p>
                   </div>
-                  {!item.isShared && (
+                  {!item.isShared && !item.isPaid && (
                     <button
                       onClick={() => setEditingItemId(item.id)}
                       className="shrink-0 rounded-lg bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-200"
                     >
                       Paylaştır
                     </button>
+                  )}
+                  {!item.isShared && item.isPaid && (
+                    <span className="shrink-0 rounded-lg bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-400">
+                      Ödendi
+                    </span>
                   )}
                 </div>
 

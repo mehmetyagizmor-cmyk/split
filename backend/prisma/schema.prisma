@@ -224,7 +224,8 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  items OrderItem[]
+  items    OrderItem[]
+  payments Payment[]
 
   @@index([restaurantId])
   @@index([billId])
@@ -288,6 +289,15 @@ model Payment {
   customerSessionId String
   customerSession   CustomerSession @relation(fields: [customerSessionId], references: [id])
 
+  // Doluysa: bu ödeme TEK bir sipariş için yapılan peşin ödemedir (müşteri
+  // sepeti onayladığında, sipariş mutfağa gitmeden önce alınır — "sipariş
+  // verip ödemeden kalkma" riskini engellemek için).
+  // Boşsa (null): bu bir "kapanış" ödemesidir — ortak ürün payı + bahşiş +
+  // (varsa) personelin girdiği ödenmemiş siparişler için, masadan ayrılırken
+  // yapılan tek seferlik son ödeme.
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id])
+
   // Ödeme anında hesaplanmış dökümün anlık görüntüsü:
   itemsAmount      Decimal @db.Decimal(10, 2) // kişisel ürünler + ortak ürün payı
   serviceFeeAmount Decimal @default(0) @db.Decimal(10, 2)
@@ -303,4 +313,5 @@ model Payment {
   @@index([restaurantId])
   @@index([billId])
   @@index([customerSessionId])
+  @@index([orderId])
 }

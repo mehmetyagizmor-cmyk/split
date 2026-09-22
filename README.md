@@ -71,6 +71,32 @@ Demo giriş bilgileri (`/staff/login`): `admin@demo-cafe.com` / `admin123` (ADMI
 
 > Not: Backend ücretsiz Render planında çalışıyor — birkaç dakika kullanılmazsa "uykuya" geçer, tekrar bir istek geldiğinde uyanması ~30-60 saniye sürebilir. Bu bir hata değil, ücretsiz planın doğal davranışı.
 
+## Ödeme Modeli: Sipariş Öncesi Ödeme
+
+Müşterinin sipariş verip ödemeden masadan kalkmasını (dine-and-dash) engellemek için,
+müşterinin **kendi verdiği** siparişler (`POST /api/orders`) mutfağa/personele
+gitmeden **önce** otomatik olarak peşin ödenir (MVP'de mock ödeme sağlayıcısıyla —
+`backend/src/lib/paymentProvider.ts`). Ödeme başarısız olursa sipariş hiç
+oluşturulmaz.
+
+Bunun getirdiği iki önemli sonuç:
+
+- **"Benim Hesabım" ekranı artık bir "kapanış" (final settlement) ekranıdır** —
+  kişisel siparişler sipariş anında ödendiği için burada sadece ortak ürün payı,
+  bahşiş ve (varsa) **personelin girdiği** ödenmemiş siparişler görünür. Personel
+  siparişleri (`POST /api/admin/tables/:id/orders`) bilerek bu peşin ödeme akışının
+  dışında tutuldu — personel zaten masada fiziksel olarak var ve ödemeyi başka
+  şekilde (nakit, POS vb.) toplayabilir.
+- **Peşin ödenmiş bir sipariş kalemi artık "ortak ürün" olarak paylaşılamaz** —
+  aksi halde restoran aynı ürünün tutarını hem ödeyen kişiden hem de sonradan
+  eklenen paylaşımcılardan iki kez almış olurdu. Ortak ürün paylaşımı özelliği
+  bu yüzden sadece personelin girdiği (henüz ödenmemiş) siparişlerde anlamlı
+  kalmaya devam ediyor.
+
+`Payment.orderId` alanı bu iki ödeme türünü ayırt eder: doluysa "tek sipariş için
+peşin ödeme", boşsa (`null`) "kapanış ödemesi".
+
 ## Proje Durumu
 
-Geliştirme aşamalı (phase'ler halinde) yürütülüyor. Şu an: **Phase 18 — Deployment** tamamlandı, uygulama canlıda.
+Geliştirme aşamalı (phase'ler halinde) yürütülüyor. Şu an: **Phase 18 — Deployment**
+tamamlandı, uygulama canlıda. Deployment sonrası ek özellik: sipariş öncesi ödeme.

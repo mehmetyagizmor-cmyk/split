@@ -5,6 +5,8 @@ import {
   createTestRestaurant,
   createTestTable,
   createTestMenuItem,
+  createTestUser,
+  loginAs,
   joinTable,
   cleanupRestaurant,
 } from "./helpers";
@@ -12,31 +14,32 @@ import {
 describe("Ödeme sistemi (senaryo 7, 8)", () => {
   let restaurantId: string;
   let menuItemId: string;
+  let staffCookie: string;
 
   beforeAll(async () => {
     const restaurant = await createTestRestaurant();
     restaurantId = restaurant.id;
     const menuItem = await createTestMenuItem(restaurantId, "100.00");
     menuItemId = menuItem.id;
+    const { email, password } = await createTestUser(restaurantId, "STAFF");
+    staffCookie = await loginAs(email, password);
   });
 
   afterAll(async () => {
     await cleanupRestaurant(restaurantId);
   });
 
-  it("7) ödeme doğru customer session'a bağlanıyor ve tekrar ödemeye izin verilmiyor", async () => {
-    // Her test kendi masasını kullanıyor — bir testte masa kapanırsa
-    // diğerini etkilemesin diye. Masada BİLEREK ikinci bir kişi (Veli) var —
-    // aksi halde Ali TEK katılımcı olurdu, ödemesi masayı hemen kapatırdı,
-    // ve ikinci deneme "zaten ödedin" (409) yerine "oturum bitti" (401)
-    // alırdı — bu da doğru ama farklı bir senaryoyu test etmiş olurdu.
+  it("7) kapanış ödemesi doğru customer session'a bağlanıyor ve tekrar ödemeye izin verilmiyor", async () => {
+    // Kapanış (final settlement) akışını test etmek için siparişi BİLEREK
+    // personel üzerinden (ödenmemiş) giriyoruz — müşterinin kendi siparişi
+    // artık anında peşin ödendiği için kapanışta borç bırakmıyor.
     const table = await createTestTable(restaurantId, "Ödeme Testi Masası");
-    const { cookie } = await joinTable(table.token, "Ali");
+    const { cookie, customerSession } = await joinTable(table.token, "Ali");
     await joinTable(table.token, "Veli");
     await request(app)
-      .post("/api/orders")
-      .set("Cookie", cookie)
-      .send({ items: [{ menuItemId, quantity: 1 }] });
+      .post(`/api/admin/tables/${table.id}/orders`)
+      .set("Cookie", staffCookie)
+      .send({ customerSessionId: customerSession.id, items: [{ menuItemId, quantity: 1 }] });
 
     const payRes = await request(app)
       .post("/api/payments")
@@ -62,9 +65,9 @@ describe("Ödeme sistemi (senaryo 7, 8)", () => {
 
     for (const p of [p1, p2]) {
       await request(app)
-        .post("/api/orders")
-        .set("Cookie", p.cookie)
-        .send({ items: [{ menuItemId, quantity: 1 }] });
+        .post(`/api/admin/tables/${table.id}/orders`)
+        .set("Cookie", staffCookie)
+        .send({ customerSessionId: p.customerSession.id, items: [{ menuItemId, quantity: 1 }] });
     }
 
     const pay1 = await request(app).post("/api/payments").set("Cookie", p1.cookie).send({ tipAmount: "0.00" });
@@ -78,5 +81,27 @@ describe("Ödeme sistemi (senaryo 7, 8)", () => {
       .post(`/api/tables/${table.token}/join`)
       .send({ name: "Geç Kalan" });
     expect(joinAttemptAfterClose.status).toBe(409);
+  });
+
+  it("9) sipariş verirken yapılan peşin ödeme, kapanış ödemesini 'zaten ödediniz' hatasıyla engellemiyor", async () => {
+    const table = await createTestTable(restaurantId, "Peşin Ödeme Testi Masası");
+    const { cookie } = await joinTable(table.token, "Selin");
+    await joinTable(table.token, "Deniz"); // masa tek kişiyle hemen kapanmasın diye
+
+    // Müşteri kendi siparişini verir — bu ANINDA peşin ödenir (orderId'li Payment).
+    await request(app)
+      .post("/api/orders")
+      .set("Cookie", cookie)
+      .send({ items: [{ menuItemId, quantity: 1 }] });
+
+    // Kapanışta sadece bahşişi ödemesi gerekiyor — ürün tutarı zaten peşin alındığı
+    // için "zaten ödediniz" (409) hatası ALMAMALI, kapanış ödemesi normal çalışmalı.
+    const payRes = await request(app)
+      .post("/api/payments")
+      .set("Cookie", cookie)
+      .send({ tipAmount: "10.00" });
+
+    expect(payRes.status).toBe(201);
+    expect(payRes.body.payment.totalAmount).toBe("10.00"); // sadece bahşiş
   });
 });

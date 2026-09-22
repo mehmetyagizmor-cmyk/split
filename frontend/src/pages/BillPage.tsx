@@ -137,6 +137,10 @@ export function BillPage() {
           ← Masaya Dön
         </Link>
         <h1 className="mt-2 text-2xl font-semibold text-neutral-900">Benim Hesabım</h1>
+        <p className="mt-1 text-xs text-neutral-500">
+          Kendi verdiğiniz siparişler sipariş anında ödendi. Burada sadece ortak
+          ürün payınız, varsa personelin girdiği ödenmemiş ürünler ve bahşiş görünür.
+        </p>
 
         <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
           <p className="text-sm font-semibold uppercase tracking-wide text-neutral-400">

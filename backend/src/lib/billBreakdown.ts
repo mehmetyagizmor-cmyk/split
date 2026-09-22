@@ -19,7 +19,15 @@ export async function computeBillBreakdown(
       select: { serviceFeePercent: true },
     }),
     prisma.order.findMany({
-      where: { customerSessionId, status: { not: "CANCELLED" } },
+      where: {
+        customerSessionId,
+        status: { not: "CANCELLED" },
+        // Sipariş verilirken peşin ödenmiş siparişler (orderId'li PAID Payment'ı
+        // olanlar) burada sayılmaz — yoksa "kapanış" hesabında ikinci kez
+        // ödenmesi istenir. Sadece personelin girdiği (ödenmemiş) siparişler
+        // final hesaba dahil kalır.
+        payments: { none: { status: "PAID" } },
+      },
       select: {
         items: {
           where: { isShared: false },

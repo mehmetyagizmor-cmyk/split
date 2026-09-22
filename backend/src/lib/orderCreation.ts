@@ -36,17 +36,19 @@ export function serializeOrder(order: OrderWithItems) {
  * fonksiyonu kullanır. Böylece doğrulama/fiyat-anlık-görüntüsü/canlı-yayın
  * mantığı iki yerde ayrı ayrı (ve birbirinden sapabilecek şekilde) yazılmıyor.
  */
-export async function createOrderForCustomerSession(params: {
-  restaurantId: string;
-  billId: string;
-  customerSessionId: string;
-  items: OrderItemInput[];
-}) {
-  const { restaurantId, billId, customerSessionId, items } = params;
-
+/**
+ * Sepetteki ürünlerin GERÇEKTEN bu restorana ait ve hâlâ satışta olduğunu
+ * doğrular, o anki fiyatlarıyla toplam tutarı hesaplar. Sipariş oluşturmadan
+ * ÖNCE ödeme tutarını bilmemiz gerektiği için (ödeme sipariş oluşturmadan
+ * önce alınıyor) bu adım createOrderForCustomerSession'dan ayrı, tek başına
+ * çağrılabilir bir fonksiyon.
+ */
+export async function validateAndPriceItems(
+  restaurantId: string,
+  items: OrderItemInput[],
+) {
   const menuItemIds = [...new Set(items.map((i) => i.menuItemId))];
 
-  // Her ürünün GERÇEKTEN bu restorana ait ve hâlâ satışta olduğunu doğruluyoruz.
   const menuItems = await prisma.menuItem.findMany({
     where: { id: { in: menuItemIds }, restaurantId, isAvailable: true },
   });
@@ -59,6 +61,25 @@ export async function createOrderForCustomerSession(params: {
   }
 
   const menuItemById = new Map(menuItems.map((m) => [m.id, m]));
+  const itemsAmount = sumLineItems(
+    items.map((i) => ({
+      unitPrice: menuItemById.get(i.menuItemId)!.price,
+      quantity: i.quantity,
+    })),
+  );
+
+  return { menuItemById, itemsAmount };
+}
+
+export async function createOrderForCustomerSession(params: {
+  restaurantId: string;
+  billId: string;
+  customerSessionId: string;
+  items: OrderItemInput[];
+}) {
+  const { restaurantId, billId, customerSessionId, items } = params;
+
+  const { menuItemById } = await validateAndPriceItems(restaurantId, items);
 
   const order = await prisma.order.create({
     data: {

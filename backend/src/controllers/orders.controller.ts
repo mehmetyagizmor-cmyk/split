@@ -3,9 +3,11 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { ApiError } from "../lib/errors";
 import { splitEvenly } from "../lib/money";
+import { paymentProvider } from "../lib/paymentProvider";
 import { getIO, billRoom } from "../lib/socket";
 import {
   createOrderForCustomerSession,
+  validateAndPriceItems,
   serializeOrder,
   type OrderItemInput,
 } from "../lib/orderCreation";
@@ -15,16 +17,67 @@ import {
  * requireCustomerSession'dan sonra çalışır — sipariş her zaman o an giriş
  * yapmış müşteriye ve onun masasının açık Bill'ine bağlanır, body'de bill/masa
  * bilgisi asla istemciden alınmaz (kimse başka bir masaya sipariş yazamaz).
+ *
+ * ÖDEME ÖNCE, SİPARİŞ SONRA: müşteri "sepeti onaylama"nın tutarını burada
+ * hemen öder — sipariş mutfağa/personele gitmeden önce ödeme başarılı
+ * olmalı. Ödeme başarısız olursa sipariş HİÇ oluşturulmaz; böylece bir
+ * müşterinin sipariş verip ödemeden masadan kalkması engellenmiş olur.
  */
 export async function createOrder(req: Request, res: Response) {
   const { items } = req.body as { items: OrderItemInput[] };
   const { customerSessionId, billId, restaurantId } = req.customerSession!;
+
+  const [{ itemsAmount }, restaurant] = await Promise.all([
+    validateAndPriceItems(restaurantId, items),
+    prisma.restaurant.findUniqueOrThrow({
+      where: { id: restaurantId },
+      select: { serviceFeePercent: true },
+    }),
+  ]);
+
+  const serviceFeeAmount = itemsAmount
+    .times(restaurant.serviceFeePercent)
+    .dividedBy(100);
+  const totalAmount = itemsAmount.plus(serviceFeeAmount);
+
+  const chargeResult = await paymentProvider.charge(totalAmount.toFixed(2));
+
+  if (!chargeResult.success) {
+    // orderId boş bırakılıyor — bu ödeme denemesi hiçbir siparişe bağlanmadı,
+    // çünkü sipariş henüz oluşturulmadı.
+    await prisma.payment.create({
+      data: {
+        restaurantId,
+        billId,
+        customerSessionId,
+        itemsAmount,
+        serviceFeeAmount,
+        totalAmount,
+        status: "FAILED",
+      },
+    });
+    throw new ApiError(402, "Ödeme başarısız oldu, sipariş oluşturulamadı");
+  }
 
   const order = await createOrderForCustomerSession({
     restaurantId,
     billId,
     customerSessionId,
     items,
+  });
+
+  await prisma.payment.create({
+    data: {
+      restaurantId,
+      billId,
+      customerSessionId,
+      orderId: order.id,
+      itemsAmount,
+      serviceFeeAmount,
+      totalAmount,
+      status: "PAID",
+      paidAt: new Date(),
+    },
   });
 
   res.status(201).json({ order });
@@ -44,6 +97,7 @@ export async function getMyOrders(req: Request, res: Response) {
 type BillOrderWithRelations = Prisma.OrderGetPayload<{
   include: {
     customerSession: { select: { id: true; name: true } };
+    payments: { where: { status: "PAID" }; select: { id: true } };
     items: {
       include: {
         menuItem: { select: { name: true } };
@@ -56,11 +110,16 @@ type BillOrderWithRelations = Prisma.OrderGetPayload<{
 }>;
 
 function serializeBillOrder(order: BillOrderWithRelations) {
+  // Sipariş verilirken peşin ödenmiş siparişlerin ürünleri artık paylaşılamaz
+  // — frontend bu bayrağa bakıp "Paylaştır" butonunu gizliyor.
+  const isPaid = order.payments.length > 0;
+
   return {
     id: order.id,
     status: order.status,
     createdAt: order.createdAt,
     orderedBy: { id: order.customerSession.id, name: order.customerSession.name },
+    isPaid,
     items: order.items.map((item) => ({
       id: item.id,
       name: item.menuItem.name,
@@ -68,6 +127,7 @@ function serializeBillOrder(order: BillOrderWithRelations) {
       unitPrice: item.unitPrice.toFixed(2),
       lineTotal: item.unitPrice.times(item.quantity).toFixed(2),
       isShared: item.isShared,
+      isPaid,
       sharedWith: item.sharedParticipants.map((p) => ({
         customerSessionId: p.customerSession.id,
         name: p.customerSession.name,
@@ -88,6 +148,7 @@ export async function getBillOrders(req: Request, res: Response) {
     orderBy: { createdAt: "desc" },
     include: {
       customerSession: { select: { id: true, name: true } },
+      payments: { where: { status: "PAID" }, select: { id: true } },
       items: {
         include: {
           menuItem: { select: { name: true } },
@@ -114,7 +175,11 @@ export async function shareOrderItem(req: Request, res: Response) {
 
   const orderItem = await prisma.orderItem.findUnique({
     where: { id: orderItemId },
-    include: { order: { select: { billId: true } } },
+    include: {
+      order: {
+        select: { billId: true, payments: { where: { status: "PAID" }, select: { id: true } } },
+      },
+    },
   });
 
   // Ürün gerçekten bu müşterinin masasının (bill'inin) siparişlerinden biri mi?
@@ -122,6 +187,13 @@ export async function shareOrderItem(req: Request, res: Response) {
   // sızdırmıyoruz.
   if (!orderItem || orderItem.order.billId !== billId) {
     throw new ApiError(404, "Sipariş kalemi bulunamadı");
+  }
+
+  // Sipariş verilirken peşin ödenmiş ürünler artık paylaşılamaz — ödeyen kişi
+  // zaten tam tutarı ödedi, sonradan paylaştırmak restoranı ürünün tutarını
+  // hem ödeyenden hem paylaşanlardan iki kez almış hale getirir.
+  if (orderItem.order.payments.length > 0) {
+    throw new ApiError(400, "Bu ürün zaten ödendi, artık paylaşılamaz");
   }
 
   if (customerSessionIds.length > 0) {

@@ -16,8 +16,11 @@ export async function createPayment(req: Request, res: Response) {
   const { tipAmount: tipAmountInput } = req.body as { tipAmount: string };
   const { customerSessionId, restaurantId, billId, tableId, name } = req.customerSession!;
 
+  // orderId: null — burada sadece "kapanış" ödemesi aranıyor. Sipariş
+  // verirken yapılan peşin ödemeler (orderId dolu) bu kontrole dahil değil,
+  // yoksa müşteri hiç kapanış ödemesi yapmadan "zaten ödediniz" hatası alır.
   const alreadyPaid = await prisma.payment.findFirst({
-    where: { customerSessionId, status: "PAID" },
+    where: { customerSessionId, status: "PAID", orderId: null },
   });
   if (alreadyPaid) {
     throw new ApiError(409, "Zaten ödeme yaptınız");
@@ -63,7 +66,7 @@ export async function createPayment(req: Request, res: Response) {
   const [allSessions, paidSessions] = await Promise.all([
     prisma.customerSession.findMany({ where: { billId }, select: { id: true } }),
     prisma.payment.findMany({
-      where: { billId, status: "PAID" },
+      where: { billId, status: "PAID", orderId: null },
       select: { customerSessionId: true },
       distinct: ["customerSessionId"],
     }),
